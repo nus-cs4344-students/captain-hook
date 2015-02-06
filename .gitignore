@@ -26,3 +26,14 @@ node_modules
 
 # Users Environment Variables
 .lock-wscript
+
+# Intellij I
+.idea
+bin
+public
+routes
+views
+
+package.json
+*.iml
+app.js
