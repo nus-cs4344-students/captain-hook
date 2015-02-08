@@ -29,11 +29,10 @@ node_modules
 
 # Intellij I
 .idea
+*.iml
+
 bin
-public
 routes
 views
 
-package.json
-*.iml
 app.js
