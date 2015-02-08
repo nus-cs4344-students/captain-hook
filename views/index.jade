@@ -1,0 +1,13 @@
+extends layout
+
+block content
+  h1(style='text-align:center;').
+    #{title}
+  p(style='text-align:center;').
+    Welcome to #{title}
+
+  canvas(id='game')
+
+  script(type='text/javascript' src='javascripts/Block.js')
+
+  include ./foot.jade

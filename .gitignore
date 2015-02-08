@@ -30,9 +30,3 @@ node_modules
 # Intellij I
 .idea
 *.iml
-
-bin
-routes
-views
-
-app.js
