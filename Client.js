@@ -55,7 +55,7 @@ function create() {
     game.stage.backgroundColor = '#313131';
 	
 	cursors = game.input.keyboard.createCursorKeys();
-	
+	//server do this, client just nid update positions.
 	player1 = new Captain(game,100,300,0);
 	player2 = new Captain(game,700,400,1);
 	player3 = new Captain(game,100,100,2);
@@ -74,6 +74,7 @@ function update() {
 		game.physics.arcade.collide(arrayOfPlayer[i].body,platforms);
 	}
 	game.physics.arcade.collide(player1.body, platforms);
+	if(!player1.hookReturn){
 	//check collision between local hook and other player, this part should be in server
 	for(var i=0;i<arrayOfPlayer.length;i++){
 		if(game.physics.arcade.collide(that.hook1,arrayOfPlayer[i].body)){
@@ -90,6 +91,7 @@ function update() {
 				game.physics.arcade.moveToObject(that.hook1,player1.body,200);
 				game.physics.arcade.moveToObject(temp,player1.body,200);
 				if(game.physics.arcade.distanceBetween(that.hook1,player1.body)<25){
+					console.log("reach local player...");
 					that.hook1.kill();
 					temp.body.velocity.x = 0;
 					temp.body.velocity.y = 0;
@@ -101,15 +103,6 @@ function update() {
 				}
 			},10)
 			i = arrayOfPlayer.length;
-		}
-	}
-	
-	//check the distance between local pudge with all the others,, this part should be in server
-	for(var i=0;i<arrayOfPlayer.length;i++){
-		if(game.physics.arcade.distanceBetween(player1.body,arrayOfPlayer[i].body)<25){
-			if(player1.teamID!=arrayOfPlayer[i].teamID){
-				player1.takeDmg();
-			}
 		}
 	}
 	
@@ -143,15 +136,36 @@ function update() {
 			i = arrayOfPillar.length;
 		}	
 	}
+	}
+
+	
+	//check the distance between local pudge with all the others,, this part should be in server
+	var counter =0;
+	for(var i=0;i<arrayOfPlayer.length;i++){
+		if(game.physics.arcade.distanceBetween(player1.body,arrayOfPlayer[i].body)<25){
+			if(player1.teamID!=arrayOfPlayer[i].teamID){
+				counter++;
+				console.log("counter at client:"+counter);
+			}
+		}
+	}
+	//console.log("counter at client:"+counter);
+	player1.takeDmg(counter);
+	//check if the local player is dead
+	if(player1.isDead()){
+		player1.respawn();
+	}
 	
 	// return local hook back to player
 	if(player1.hook.countLiving()>0){
 		if(game.physics.arcade.distanceBetween(that.hook1,player1.body)>500){
+			player1.hookReturn = true;
 			game.physics.arcade.moveToObject(that.hook1,player1.body,200);
 			var back3 =setInterval(function() {	
 				game.physics.arcade.moveToObject(that.hook1,player1.body,200);
-				if(game.physics.arcade.distanceBetween(that.hook1,player1.body)<3){
+				if(game.physics.arcade.distanceBetween(that.hook1,player1.body)<50){
 					//console.log("testing");
+					player1.hookReturn = false;
 					that.hook1.kill();
 					clearInterval(back3);
 				}
