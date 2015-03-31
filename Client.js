@@ -5,6 +5,7 @@ function preload() {
     game.load.spritesheet('dude', 'assets/dude.png', 32, 48);
     game.load.image('star', 'assets/star.png');
 	game.load.image('ground', 'assets/platform_vertical.png');
+    // this.load.script('HudManager', '/js/HUDManager.js');
 }
 
 var fireRate = 100;
@@ -22,6 +23,8 @@ var player4;
 var arrayOfPillar = [];
 
 function create() {
+
+    this.hud = Phaser.Plugin.HUDManager.create(this.game, this, 'gamehud');
 
     game.physics.startSystem(Phaser.Physics.ARCADE);
 	
