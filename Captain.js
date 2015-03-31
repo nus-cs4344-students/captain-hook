@@ -47,6 +47,11 @@ function Captain(game,xPos,yPos,sid){
 	this.xVelocity = this.body.body.velocity.x;
 	this.yVelocity = this.body.body.velocity.y;
 	this.hookReturn =false;
+
+	this.hud = Phaser.Plugin.HUDManager.create(game, this, 'captainHUD');
+  	this.healthHUD = this.hud.addBar(0,-20, 32, 2, 100, 'hp', this, Phaser.Plugin.HUDManager.HEALTHBAR, false);
+  	this.healthHUD.bar.anchor.setTo(0.5, 0.5);
+  	this.body.addChild(this.healthHUD.bar);
 	
 	this.isDead = function(){
 		if(that.hp<=0){
