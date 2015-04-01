@@ -1,8 +1,4 @@
-/*
-Script: Node.JS Game Server - Room Logic
-Author: Huy Tran
-Email: kingbazoka@gmail.com
-*/
+"use strict";
 
 function run(room, player, msg)
 {

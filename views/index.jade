@@ -6,8 +6,10 @@ block content
   p(style='text-align:center;').
     Welcome to #{title}
 
-  canvas(id='game')
+  div(id='captain-hook' style='width:800px; margin:0 auto;')
 
   script(type='text/javascript' src='javascripts/Block.js')
+  script(type='text/javascript' src='javascripts/Game.js')
+  script(type='text/javascript' src='javascripts/Captain.js')
 
   include ./foot.jade
