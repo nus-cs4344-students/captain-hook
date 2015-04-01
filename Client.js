@@ -16,15 +16,12 @@ var that = this;
 var player1; // local player
 this.hook1;// local hook that is controlable by local player
 
-var arrayOfPlayer = [];
-var player2;
-var player3;
-var player4;
+var arrayOfPlayers = [];
 var arrayOfPillar = [];
 
 function create() {
 
-    this.hud = Phaser.Plugin.HUDManager.create(this.game, this, 'gamehud');
+    // this.hud = Phaser.Plugin.HUDManager.create(this.game, this, 'gamehud');
 
     game.physics.startSystem(Phaser.Physics.ARCADE);
 	
@@ -60,12 +57,9 @@ function create() {
 	cursors = game.input.keyboard.createCursorKeys();
 	//server do this, client just nid update positions.
 	player1 = new Captain(game,100,300,0);
-	player2 = new Captain(game,700,400,1);
-	player3 = new Captain(game,100,100,2);
-	player4 = new Captain(game,700,200,3);
-	arrayOfPlayer[0] = player2;
-	arrayOfPlayer[1] = player3;
-	arrayOfPlayer[2] = player4;
+	arrayOfPlayers[0] = new Captain(game,700,400,1);
+	arrayOfPlayers[1] = new Captain(game,100,100,2);
+	arrayOfPlayers[2] = new Captain(game,700,200,3);
 	arrayOfPillar[0] = pillar1;
 	arrayOfPillar[1] = pillar2;
 	arrayOfPillar[2] = pillar3;
@@ -73,80 +67,65 @@ function create() {
 }
 
 function update() {
-	for(var i=0;i<arrayOfPlayer.length;i++){
-		game.physics.arcade.collide(arrayOfPlayer[i].body,platforms);
+	for(var i=0;i<arrayOfPlayers.length;i++){
+		game.physics.arcade.collide(arrayOfPlayers[i].sprite,platforms);
 	}
-	game.physics.arcade.collide(player1.body, platforms);
+	game.physics.arcade.collide(player1.sprite, platforms);
 	if(!player1.hookReturn){
-	//check collision between local hook and other player, this part should be in server
-	for(var i=0;i<arrayOfPlayer.length;i++){
-		if(game.physics.arcade.collide(that.hook1,arrayOfPlayer[i].body)){
-			var temp = arrayOfPlayer[i].body;
-			if((player1.body.x<270)&&(that.hook1.x>520)){
-				ledge1.body.checkCollision.right = false;
-				ledge2.body.checkCollision.right = false;
+		//check collision between local hook and other player, this part should be in server
+		for (var i = 0; i < arrayOfPlayers.length; i++){
+			if (game.physics.arcade.collide(that.hook1, arrayOfPlayers[i].sprite)) {
+				var playerBeingHooked = arrayOfPlayers[i];
+
+				disableCollision(playerBeingHooked);
+
+				var back1 = setInterval(function() {
+					// Player being hooked follows the hook while it goes back to thrower
+
+					game.physics.arcade.moveToObject(that.hook1, player1.sprite, 200);
+					game.physics.arcade.moveToObject(playerBeingHooked.sprite, that.hook1, 200);
+					if (game.physics.arcade.distanceBetween(that.hook1, player1.sprite) < 15) {
+						console.log("reach local player...");
+						that.hook1.kill();
+						playerBeingHooked.sprite.body.velocity = new Phaser.Point(0,0);
+						enableCollision(playerBeingHooked);
+
+						clearInterval(back1);
+					}
+				},10)
+				i = arrayOfPlayers.length;
 			}
-			else if((player1.body.x>520)&&(that.hook1.x<270)){
-				ledge1.body.checkCollision.left = false;
-				ledge2.body.checkCollision.left = false;
-			}
-			var back1 =setInterval(function() {
-				game.physics.arcade.moveToObject(that.hook1,player1.body,200);
-				game.physics.arcade.moveToObject(temp,player1.body,200);
-				if(game.physics.arcade.distanceBetween(that.hook1,player1.body)<25){
-					console.log("reach local player...");
-					that.hook1.kill();
-					temp.body.velocity.x = 0;
-					temp.body.velocity.y = 0;
-					ledge1.body.checkCollision.left=true;
-					ledge2.body.checkCollision.left=true;
-					ledge1.body.checkCollision.right = true;
-					ledge2.body.checkCollision.right = true;
-					clearInterval(back1);
-				}
-			},10)
-			i = arrayOfPlayer.length;
 		}
-	}
 	
-	//check collision between local hook and pillars
-	for(var i=0;i<arrayOfPillar.length;i++){
-		if(game.physics.arcade.collide(that.hook1,arrayOfPillar[i])){	
-			if((player1.body.x<270)&&(that.hook1.x>520)){
-				ledge1.body.checkCollision.left = false;
-				ledge2.body.checkCollision.left = false;
-			}
-			else if((player1.body.x>520)&&(that.hook1.x<270)){
-				ledge1.body.checkCollision.right = false;
-				ledge2.body.checkCollision.right = false;
-			}
-			that.hook1.body.velocity.x=0;
-			that.hook1.body.velocity.y=0;
-			var back2 =setInterval(function() {
-				game.physics.arcade.moveToObject(player1.body,that.hook1,200);
-				if(game.physics.arcade.distanceBetween(that.hook1,player1.body)<25){
-					that.hook1.kill();
-					player1.hookedPillar = false;
-					player1.body.body.velocity.x=0;
-					player1.body.body.velocity.y=0;
-					ledge1.body.checkCollision.left=true;
-					ledge2.body.checkCollision.left=true;
-					ledge1.body.checkCollision.right = true;
-					ledge2.body.checkCollision.right = true;
-					clearInterval(back2);
-				}
-			},10)
-			i = arrayOfPillar.length;
-		}	
-	}
+		//check collision between local hook and pillars
+		for(var i=0;i<arrayOfPillar.length;i++){
+			if(game.physics.arcade.collide(that.hook1,arrayOfPillar[i])){	
+
+				disableCollision(player1);
+
+				that.hook1.body.velocity.x=0;
+				that.hook1.body.velocity.y=0;
+				var back2 =setInterval(function() {
+					game.physics.arcade.moveToObject(player1.sprite,that.hook1,200);
+					if(game.physics.arcade.distanceBetween(that.hook1,player1.sprite)<25){
+						that.hook1.kill();
+						player1.hookedPillar = false;
+						player1.sprite.body.velocity = new Phaser.Point(0,0);
+						enableCollision(player1);
+						clearInterval(back2);
+					}
+				},10)
+				i = arrayOfPillar.length;
+			}	
+		}
 	}
 
 	
 	//check the distance between local pudge with all the others,, this part should be in server
 	var counter =0;
-	for(var i=0;i<arrayOfPlayer.length;i++){
-		if(game.physics.arcade.distanceBetween(player1.body,arrayOfPlayer[i].body)<25){
-			if(player1.teamID!=arrayOfPlayer[i].teamID){
+	for(var i=0;i<arrayOfPlayers.length;i++){
+		if(game.physics.arcade.distanceBetween(player1.sprite,arrayOfPlayers[i].sprite)<25){
+			if(player1.teamID!=arrayOfPlayers[i].teamID){
 				counter++;
 				console.log("counter at client:"+counter);
 			}
@@ -161,12 +140,12 @@ function update() {
 	
 	// return local hook back to player
 	if(player1.hook.countLiving()>0){
-		if(game.physics.arcade.distanceBetween(that.hook1,player1.body)>500){
+		if(game.physics.arcade.distanceBetween(that.hook1,player1.sprite)>500){
 			player1.hookReturn = true;
-			game.physics.arcade.moveToObject(that.hook1,player1.body,200);
+			game.physics.arcade.moveToObject(that.hook1,player1.sprite,200);
 			var back3 =setInterval(function() {	
-				game.physics.arcade.moveToObject(that.hook1,player1.body,200);
-				if(game.physics.arcade.distanceBetween(that.hook1,player1.body)<50){
+				game.physics.arcade.moveToObject(that.hook1,player1.sprite,200);
+				if(game.physics.arcade.distanceBetween(that.hook1,player1.sprite)<50){
 					//console.log("testing");
 					player1.hookReturn = false;
 					that.hook1.kill();
@@ -176,43 +155,53 @@ function update() {
 		}
 	}
 
-    player1.body.rotation = game.physics.arcade.angleToPointer(player1.body);
-	player1.body.body.velocity.x=0;
-	player1.body.body.velocity.y=0;
+    // player1.sprite.rotation = game.physics.arcade.angleToPointer(player1.sprite);
+	player1.sprite.body.velocity.x=0;
+	player1.sprite.body.velocity.y=0;
 	
 	//action listener for movement and fire hook
     if (game.input.activePointer.isDown)
     {
-        fire();
+        throwHook();
     }
     else if (cursors.left.isDown)
     {
-        player1.body.body.velocity.x -= 100;
+        player1.sprite.body.velocity.x -= 100;
     }
     else if (cursors.right.isDown)
     {
-        player1.body.body.velocity.x += 100;
+        player1.sprite.body.velocity.x += 100;
     }
 
     else if (cursors.up.isDown)
     {
-        player1.body.body.velocity.y -= 100;
+        player1.sprite.body.velocity.y -= 100;
     }
     else if (cursors.down.isDown)
     {
-        player1.body.body.velocity.y += 100;
+        player1.sprite.body.velocity.y += 100;
     }
 
 }
 
-function fire() {
+function enableCollision(object) {
+	object.sprite.body.checkCollision.right = true;
+	object.sprite.body.checkCollision.left = true;
+}
+
+function disableCollision(object) {
+	object.sprite.body.checkCollision.right = false;
+	object.sprite.body.checkCollision.left = false;
+}
+
+function throwHook() {
 
 	if(player1.hook.countLiving()<1)
     {
         that.hook1 = player1.hook.getFirstDead();
 		
 		//set bullet starting position
-        hook1.reset(player1.body.x - 5, player1.body.y - 5);
+        hook1.reset(player1.sprite.x - 5, player1.sprite.y - 5);
 
         game.physics.arcade.moveToPointer(hook1, 300);
 		ready = false;
@@ -220,8 +209,6 @@ function fire() {
 }
 
 function render(pointer) {
-	
-	
-    game.debug.text('Active star: ' + player1.hook.countLiving() + ' / ' + player1.hook.total+ " x:"+player1.body.x+"	px:"+game.input.x+" HP:"+player1.hp, 32, 32);
+    game.debug.text('Active star: ' + player1.hook.countLiving() + ' / ' + player1.hook.total+ " x:"+player1.sprite.x+"	px:"+game.input.x+" HP:"+player1.hp, 32, 32);
     //game.debug.spriteInfo(sprite, 32, 450);
 }

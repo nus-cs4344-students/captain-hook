@@ -7,11 +7,11 @@ function Captain(game,xPos,yPos,sid){
     this.hook.setAll('checkWorldBounds', true);	
     //this.hook.setAll('outOfBoundsKill', true);
 	
-	this.body = game.add.sprite(xPos,yPos,'dude')
-	this.body.anchor.set(0.5);
-	game.physics.enable(this.body, Phaser.Physics.ARCADE);
-	this.body.body.allowRotation = false;
-	this.body.body.collideWorldBounds = true;
+	this.sprite = game.add.sprite(xPos,yPos,'dude')
+	this.sprite.anchor.set(0.5);
+	game.physics.enable(this.sprite, Phaser.Physics.ARCADE);
+	this.sprite.body.allowRotation = false;
+	this.sprite.body.collideWorldBounds = true;
 	
 	//Public variables
 	this.x;
@@ -44,14 +44,14 @@ function Captain(game,xPos,yPos,sid){
 	this.leftOrRight = sid;
 	this.hookedPillar = false;
 	this.hookedPlayer = false;
-	this.xVelocity = this.body.body.velocity.x;
-	this.yVelocity = this.body.body.velocity.y;
+	this.xVelocity = this.sprite.body.velocity.x;
+	this.yVelocity = this.sprite.body.velocity.y;
 	this.hookReturn =false;
 
 	this.hud = Phaser.Plugin.HUDManager.create(game, this, 'captainHUD');
   	this.healthHUD = this.hud.addBar(0,-20, 32, 2, 100, 'hp', this, Phaser.Plugin.HUDManager.HEALTHBAR, false);
   	this.healthHUD.bar.anchor.setTo(0.5, 0.5);
-  	this.body.addChild(this.healthHUD.bar);
+  	this.sprite.addChild(this.healthHUD.bar);
 	
 	this.isDead = function(){
 		if(that.hp<=0){
@@ -73,8 +73,8 @@ Captain.prototype.respawn = function(){
 	console.log("character respawned");
 	this.x = this.initialX;
 	this.y = this.initialY;
-	this.body.body.x = this.initialX;
-	this.body.body.y = this.initialY;
+	this.sprite.body.x = this.initialX;
+	this.sprite.body.y = this.initialY;
 	this.xVelocity = 0;
 	this.yVelocity = 0;
 	this.hp = 100;
