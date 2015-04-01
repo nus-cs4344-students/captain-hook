@@ -14,8 +14,6 @@ function Captain(game,xPos,yPos,sid){
 	this.body.body.collideWorldBounds = true;
 	
 	//Public variables
-	this.x;
-	this.y;
 	this.initialX;
 	this.initialY;
 	this.xVelocity;
@@ -28,11 +26,9 @@ function Captain(game,xPos,yPos,sid){
 	this.hookedPillar;
 	this.hookedPlayer;
 	this.hookReturn;
+	this.isShooting = false;
 	
 	//Constructor
-	var that = this;
-	this.x = xPos;
-	this.y = yPos;
 	this.initialX = xPos;
 	this.initialY = yPos;
 	this.xVelocity = 0;
@@ -47,9 +43,18 @@ function Captain(game,xPos,yPos,sid){
 	this.xVelocity = this.body.body.velocity.x;
 	this.yVelocity = this.body.body.velocity.y;
 	this.hookReturn =false;
-	
+
+	this.init = function(xPos, yPos, sid) {
+		this.initialX = xPos;
+		this.initialY = yPos;
+		this.hookID = sid;
+		this.playerID = sid;
+		this.teamID = sid%2;
+		this.leftOrRight = sid;
+	};
+
 	this.isDead = function(){
-		if(that.hp<=0){
+		if(this.hp<=0){
 			return true;
 		}
 		return false;
@@ -60,12 +65,12 @@ function Captain(game,xPos,yPos,sid){
 // remark: if two characters are getting nearer, automatically deduct their own HP
 Captain.prototype.takeDmg = function(counter){
 	this.hp = this.hp-1*counter;
-	console.log("number of nearer opponents: "+counter);
+	//console.log("number of nearer opponents: "+counter);
 }
 
 // Public method: respawn()
 Captain.prototype.respawn = function(){
-	console.log("character respawned");
+	//console.log("character respawned");
 	this.x = this.initialX;
 	this.y = this.initialY;
 	this.body.body.x = this.initialX;
@@ -73,7 +78,4 @@ Captain.prototype.respawn = function(){
 	this.xVelocity = 0;
 	this.yVelocity = 0;
 	this.hp = 100;
-}
-
-
-//global.Captain = Captain;
+};

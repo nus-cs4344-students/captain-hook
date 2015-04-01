@@ -8,12 +8,14 @@ var net = require('net');
 require(SERVERPATH + "Player.js");
 require(SERVERPATH + "Utilities.js");
 require(SERVERPATH + "Config.js");
-require(GAMEPATH + "Captain.js");
-require(GAMEPATH + "Game.js");
 
 function CHServer(sock) {
 
+    // private Variables
+    var nextPID = 0;  // PID to assign to next connected player
     var socket = sock;
+    var sockets = {}; // Associative array for sockets, indexed via player ID
+    var players = {}; // Associative array for players, indexed via socket ID
 
     var gameLoop = function() {
     };
@@ -21,11 +23,160 @@ function CHServer(sock) {
     this.start = function() {
         // Connection established from a client socket
         socket.on("connection", function(conn) {
-            console.log("OK");
+            newPlayer(conn);
+
+            // When the client closes the connection to the
+            // tell other clients the client left
+            conn.on('close', function () {
+                var pid = players[conn.id].pid;
+                delete players[conn.id];
+                broadcastUnless({
+                    type: "delete",
+                    id: pid}, pid)
+            });
+
+            // When the client send something to the server.
+            conn.on('data', function (data) {
+                var message = JSON.parse(data);
+                var p = players[conn.id];
+                if (p === undefined) {
+                    // we received data from a connection with
+                    // no corresponding player.  don't do anything.
+                    console.log("player at " + conn.id + " is invalid.");
+                    return;
+                }
+
+                switch (message.type) {
+                    case "join":
+                        var player = players[conn.id];
+                        var pid = players[conn.id].pid;
+                        // A client has requested to join.
+                        // Initialize a ship at random position
+                        unicast(conn, {
+                            type:"joined",
+                            id: pid,
+                            x: player.x,
+                            y: player.y
+                        });
+
+                        // and tell everyone.
+                        broadcastUnless({
+                            type: "new",
+                            id: pid,
+                            x: player.x,
+                            y: player.y
+                            }, pid);
+
+                        // Tell this new guy who else is in the game.
+                        for (var i in players) {
+                            if (i != conn.id) {
+                                if (players[i] !== undefined) {
+                                    unicast(sockets[pid], {
+                                        type:"new",
+                                        id: players[i].pid,
+                                        x: players[i].x,
+                                        y: players[i].y
+                                        });
+                                }
+                            }
+                        }
+                        break;
+
+                    case "hook":
+                        // A player has asked to hook.  Create
+                        // tell everyone (excluding the player)
+                        var pid = players[conn.id].pid;
+                        broadcastUnless({
+                            type:"hook",
+                            id: pid,
+                            x: message.x,
+                            y: message.y
+                        }, pid);
+                        break;
+
+                    case "update":
+                        var pid = message.id;
+                        // and tell everyone.
+                        for (var i in sockets) {
+                            if (i != pid) {
+                                if (sockets[i] !== undefined) {
+                                    unicast(sockets[i], {
+                                        type:"update",
+                                        id: message.id,
+                                        x: message.x,
+                                        y: message.y
+                                    });
+                                }
+                            }
+                        }
+                        break;
+
+                    default:
+                        console.log("Unhandled " + message.type);
+                }
+            });
         });
 
         // cal the game loop
         setInterval(function() {gameLoop();}, 1000/Config.FRAME_RATE);
+    };
+
+    /*
+     * private method: newPlayer()
+     *
+     * Called when a new connection is detected.
+     * Create and init the new player.
+     */
+    var newPlayer = function (conn) {
+        nextPID ++;
+        // Create player object and insert into players with key = conn.id
+        players[conn.id] = new Player(100, 100, conn.id, conn);
+        players[conn.id].pid = nextPID;
+        sockets[nextPID] = conn;
+        console.log('New player ' + conn.id + ' added.\n');
+    };
+
+    /*
+     * private method: broadcast(msg)
+     *
+     * broadcast takes in a JSON structure and send it to
+     * all players.
+     *
+     * e.g., broadcast({type: "abc", x: 30});
+     */
+    var broadcast = function (msg) {
+        var id;
+        for (id in sockets) {
+            sockets[id].write(JSON.stringify(msg));
+        }
+    };
+
+    /*
+     * private method: broadcastUnless(msg, id)
+     *
+     * broadcast takes in a JSON structure and send it to
+     * all players, except player id
+     *
+     * e.g., broadcast({type: "abc", x: 30}, pid);
+     */
+    var broadcastUnless = function (msg, pid) {
+        var id;
+        for (id in sockets) {
+            if (id != pid)
+                sockets[id].write(JSON.stringify(msg));
+        }
+    };
+
+    /*
+     * private method: unicast(socket, msg)
+     *
+     * unicast takes in a socket and a JSON structure
+     * and send the message through the given socket.
+     *
+     * e.g., unicast(socket, {type: "abc", x: 30});
+     */
+    var unicast = function (socket, msg) {
+        socket.write(JSON.stringify(msg));
     }
 }
 

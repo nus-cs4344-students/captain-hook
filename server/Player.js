@@ -1,10 +1,11 @@
 "use strict";
 
-function Player(_x, _y, _name, _socket)
+function Player(_x, _y, _pid, _socket)
 {
     this.x = _x;
     this.y = _y;
-    this.name = _name;
+    this.name = _pid;
+    this.pid = _pid;
     this.room = null;
     this.socket = _socket;
     this.is_ready = false;
