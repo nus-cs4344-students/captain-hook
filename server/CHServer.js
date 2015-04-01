@@ -92,7 +92,6 @@ global.CHServer = CHServer;
 /**
  Script: Node.JS Game Server - Core Server
  Author: Huy Tran & WU Long
- Email: kingbazoka@gmail.com
  Description:
  This project aim to create an easy to use multiplayer game server, programmers only
  have to implement gameplay logic which will be run in each game room and don't have
