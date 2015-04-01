@@ -8,6 +8,10 @@ var app = require('../app');
 var debug = require('debug')('captain-hook:server');
 var http = require('http');
 
+// for game server
+var sockjs = require("sockjs");
+require('../server/CHServer');
+
 /**
  * Get port from environment and store in Express.
  */
@@ -20,6 +24,15 @@ app.set('port', port);
  */
 
 var server = http.createServer(app);
+
+/**
+ * Create Game server
+ */
+
+var sock = sockjs.createServer();
+sock.installHandlers(server, {prefix:'/captain'});
+var gameServer = new CHServer(sock);
+gameServer.start();
 
 /**
  * Listen on provided port, on all network interfaces.

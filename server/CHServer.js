@@ -1,97 +1,39 @@
 'use strict';
 
-var serverPort = 8888;
-
 var SERVERPATH = "./";
-var CLIENTPATH = "../client/";
+var GAMEPATH = "../public/javascripts/";
 var roomScript = require(SERVERPATH + "RoomLogic.js");
 
 var net = require('net');
-require(SERVERPATH + "Room.js");
 require(SERVERPATH + "Player.js");
 require(SERVERPATH + "Utilities.js");
 require(SERVERPATH + "Config.js");
+require(GAMEPATH + "Captain.js");
+require(GAMEPATH + "Game.js");
 
-function CHServer() {
-    var roomList = [];
-    var playerList = [];
+function CHServer(sock) {
 
-    // Update room
-    setInterval(function(){
-        roomList.forEach(function(r){
-            if (r.IsFinished() || (!r.IsWaiting() && r.playerCount <= 0))
-            {
-                roomList.remove(r);
-            }
-            if (!r.IsFinished() && r.playerCount > 0)
-            {
-                // Switch from READY to PLAYING mode
-                if (r.IsReady())
-                {
-                    var isAllReady = true;
-                    r.players.forEach(function(p){
-                        if (p.is_ready == false)
-                        {
-                            isAllReady = false;
-                        }
-                    });
-                    if (isAllReady)
-                    {
-                        r.Play();
-                    }
-                }
-                roomScript.update(r);
-            }
-        });
-    }, 10);
+    var socket = sock;
 
     var gameLoop = function() {
-
     };
 
     this.start = function() {
-        try {
-            var express = require("express");
-            var http = require("http");
-            var sockjs = require("sockjs");
-            var sock = sockjs.createServer();
+        // Connection established from a client socket
+        socket.on("connection", function(conn) {
+            console.log("OK");
+        });
 
-            // Connection established from a client socket
-            sock.on("connection", function(conn) {
-                console.log("OK");
-            });
-
-            var app = express();
-            var httpServer = http.createServer(app);
-            sock.installHandlers(httpServer, {prefix:"/index"});
-            httpServer.listen(Config.PORT, Config.SERVER_NAME);
-            app.use(express.static(__dirname));
-            app.set('views', path.join(__dirname, 'views'));
-            app.set("view engine", 'jade');
-
-            var router = express.Router();
-            /* GET home page. */
-            router.get('/', function(req, res, next) {
-                res.render('index', { title: 'Captain Hook' });
-            });
-            app.get("/", router.index);
-            console.log("Server running on : http://" + Config.SERVER_NAME + ":" + Config.PORT + "\n");
-        } catch (e) {
-            console.log("Cannot listen to " + Config.PORT);
-            console.log("Error : " + e);
-        }
-
+        // cal the game loop
+        setInterval(function() {gameLoop();}, 1000/Config.FRAME_RATE);
     }
 }
 
 global.CHServer = CHServer;
 
-
-
-
 /**
  Script: Node.JS Game Server - Core Server
- Author: Huy Tran & WU Long
+ Template Author: Huy Tran
  Description:
  This project aim to create an easy to use multiplayer game server, programmers only
  have to implement gameplay logic which will be run in each game room and don't have
@@ -139,7 +81,42 @@ global.CHServer = CHServer;
  SEND:		[READY] / [CANCEL]
  RECEIVE:	[PLAYERREADY;<player-name>] / [PLAYERCANCEL;<player-name>] (Players already in room)
  */
+/*
+var roomList = [];
+var playerList = [];
+
+// Update room
+setInterval(function(){
+    roomList.forEach(function(r){
+        if (r.IsFinished() || (!r.IsWaiting() && r.playerCount <= 0))
+        {
+            roomList.remove(r);
+        }
+        if (!r.IsFinished() && r.playerCount > 0)
+        {
+            // Switch from READY to PLAYING mode
+            if (r.IsReady())
+            {
+                var isAllReady = true;
+                r.players.forEach(function(p){
+                    if (p.is_ready == false)
+                    {
+                        isAllReady = false;
+                    }
+                });
+                if (isAllReady)
+                {
+                    r.Play();
+                }
+            }
+            roomScript.update(r);
+        }
+    });
+}, 10);
+*/
+
 // Main Server
+/*
 net.createServer(function(socket) {
     // Create new player on connected
     var player = new Player(0, 0, "player-" + playerList.length, socket);
@@ -243,3 +220,4 @@ net.createServer(function(socket) {
     .listen(serverPort);
 
 console.log("Server is running at port " + serverPort);
+*/
