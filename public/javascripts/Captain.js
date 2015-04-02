@@ -19,6 +19,7 @@ function Captain(game,xPos,yPos,sid){
 	//Public variables
 	this.initialX;
 	this.initialY;
+	this.isMoving = false;
 	this.xVelocity;
 	this.yVelocity;
 	this.health;
@@ -67,6 +68,14 @@ function Captain(game,xPos,yPos,sid){
 		}
 		return false;
 	}
+	
+	this.createHook = function(_x,_y){
+		this.hook = game.add.sprite(_x+10,_y+10,'star');
+		this.hook.anchor.set(0.5);
+		game.physics.enable(this.hook,Phaser.Physics.ARCADE);
+		this.hook.body.collideWorldBounds = false;
+	}
+
 }
 
 // Public method: takeDmg()
@@ -86,11 +95,4 @@ Captain.prototype.respawn = function(){
 	this.xVelocity = 0;
 	this.yVelocity = 0;
 	this.hp = 100;
-}
-
-Captain.prototype.createHook = function(_x,_y){
-	this.hook = game.add.sprite(_x+10,_y+10,'star');
-	this.hook.anchor.set(0.5);
-	game.physics.enable(this.hook,Phaser.Physics.ARCADE);
-	this.hook.body.collideWorldBounds = false;
 }

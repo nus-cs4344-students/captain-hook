@@ -17,23 +17,28 @@ function Client() {
     var updateLoop = function() {
         var player = getLocalPlayer();
 		var hook = getLocalHook();
-		//if(!player.beingHooked){
+		if(player.isMoving || player.beingHooked){
 			sendToServer({type:"update",
 							id: player.playerID,
 							x: player.body.x,
 							y: player.body.y});
-		//}
+		}
+		
         if (player.isShooting) {
             sendToServer({type:"hook",
                 id: player.playerID,
-                x: hook.body.x,
-				y: hook.body.y});
-				//hookedPlayer:player.hookedPlayer});
-		//	sendToServer({type:"update",
-		//					id: player.hookedPlayer,
-		//					x: player.hook.x,
-		//					y: player.hook.y});
+                x: hook.body.velocity.x,
+				y: hook.body.velocity.y});
         }
+
+		if (player.hookedPlayer != -1) {
+			console.log("hooked one player : " + player.hookedPlayer);
+			sendToServer({type:"update-hooked-player",
+							id: player.playerID,
+							hid: player.hookedPlayer,
+							x: player.hook.x,
+							y: player.hook.y});
+		}
     };
 	
     /*
