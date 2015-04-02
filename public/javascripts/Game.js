@@ -1,3 +1,4 @@
+
 var game = new Phaser.Game(800, 600, Phaser.CANVAS, 'captain-hook', { preload: preload, create: create, update: update, render: render });
 
 function preload() {
@@ -14,8 +15,8 @@ var arrayOfPillar = [];
 var that = this;
 var cursors;
 
-function create() {
 
+function create() {
     game.physics.startSystem(Phaser.Physics.ARCADE);
 
     platforms = game.add.group();
@@ -57,6 +58,7 @@ function create() {
 }
 
 function update() {
+	
     // Check whether every player is collition with all platforms
     for (var i = 0; i < that.arrayOfPlayer.length; i++) {
         game.physics.arcade.collide(that.arrayOfPlayer[i].body, platforms);
@@ -69,26 +71,19 @@ function update() {
         for (var i = 0; i < that.arrayOfPlayer.length; i++) {
             if (game.physics.arcade.collide(that.hook1, that.arrayOfPlayer[i].body)) {
                 var temp = that.arrayOfPlayer[i].body;
-                if ((that.captain.body.x < 270) && (that.hook1.x > 520)) {
-                    ledge1.body.checkCollision.right = false;
-                    ledge2.body.checkCollision.right = false;
-                }
-                else if ((that.captain.body.x > 520) && (that.hook1.x < 270)) {
-                    ledge1.body.checkCollision.left = false;
-                    ledge2.body.checkCollision.left = false;
-                }
+				that.captain.hookedPlayer = that.arrayOfPlayer[i].playerID;
+				disableCollision(that.arrayOfPlayer[i]);
                 var back1 = setInterval(function () {
                     game.physics.arcade.moveToObject(that.hook1, that.captain.body, 200);
                     game.physics.arcade.moveToObject(temp, that.captain.body, 200);
                     if (game.physics.arcade.distanceBetween(that.hook1, that.captain.body) < 25) {
                         //console.log("reach local player...");
                         that.hook1.kill();
+						that.captain.hookedPlayer=-1;
+						that.captain.isShooting = false;
                         temp.body.velocity.x = 0;
                         temp.body.velocity.y = 0;
-                        ledge1.body.checkCollision.left = true;
-                        ledge2.body.checkCollision.left = true;
-                        ledge1.body.checkCollision.right = true;
-                        ledge2.body.checkCollision.right = true;
+						enableCollision(that.arrayOfPlayer[i]);
                         clearInterval(back1);
                     }
                 }, 10)
@@ -99,27 +94,17 @@ function update() {
         //check collision between local hook and pillars
         for (var i = 0; i < arrayOfPillar.length; i++) {
             if (game.physics.arcade.collide(that.hook1, arrayOfPillar[i])) {
-                if ((that.captain.body.x < 270) && (that.hook1.x > 520)) {
-                    ledge1.body.checkCollision.left = false;
-                    ledge2.body.checkCollision.left = false;
-                }
-                else if ((that.captain.body.x > 520) && (that.hook1.x < 270)) {
-                    ledge1.body.checkCollision.right = false;
-                    ledge2.body.checkCollision.right = false;
-                }
+				disableCollision(that.captain);
                 that.hook1.body.velocity.x = 0;
                 that.hook1.body.velocity.y = 0;
                 var back2 = setInterval(function () {
                     game.physics.arcade.moveToObject(that.captain.body, that.hook1, 200);
                     if (game.physics.arcade.distanceBetween(that.hook1, that.captain.body) < 25) {
                         that.hook1.kill();
-                        that.captain.hookedPillar = false;
+						that.captain.isShooting = false;
                         that.captain.body.body.velocity.x = 0;
                         that.captain.body.body.velocity.y = 0;
-                        ledge1.body.checkCollision.left = true;
-                        ledge2.body.checkCollision.left = true;
-                        ledge1.body.checkCollision.right = true;
-                        ledge2.body.checkCollision.right = true;
+						enableCollision(that.captain);
                         clearInterval(back2);
                     }
                 }, 10)
@@ -148,9 +133,8 @@ function update() {
     }
 
     // return local hook back to player
-    if (that.captain.hook.countLiving() > 0) {
-        that.captain.isShooting = true; // the hook is shooting
-        if (game.physics.arcade.distanceBetween(that.hook1, that.captain.body) > 500) {
+	if(that.captain.isShooting){
+		if (game.physics.arcade.distanceBetween(that.hook1, that.captain.body) > 500) {
             that.captain.hookReturn = true;
             game.physics.arcade.moveToObject(that.hook1, that.captain.body, 200);
             var back3 = setInterval(function () {
@@ -163,7 +147,7 @@ function update() {
                 }
             }, 10)
         }
-    }
+	}
 
     that.captain.body.rotation = game.physics.arcade.angleToPointer(that.captain.body);
     that.captain.body.body.velocity.x = 0;
@@ -188,20 +172,28 @@ function update() {
     }
 }
 
+
+function enableCollision(object) {
+	object.body.body.checkCollision.right = true;
+	object.body.body.checkCollision.left = true;
+}
+
+function disableCollision(object) {
+	object.body.body.checkCollision.right = false;
+	object.body.body.checkCollision.left = false;
+}
 function fire() {
-
-    if (that.captain.hook.countLiving() < 1) {
-        that.hook1 = that.captain.hook.getFirstDead();
-
-        //set bullet starting position
-        that.hook1.reset(that.captain.body.x - 5, that.captain.body.y - 5);
-
-        game.physics.arcade.moveToPointer(that.hook1, 300);
-    }
+	
+	if(!that.captain.isShooting){
+		that.captain.isShooting=true;
+		that.captain.createHook(that.captain.body.body.x,that.captain.body.body.y);
+		that.hook1 = that.captain.hook;
+		game.physics.arcade.moveToPointer(that.hook1,300);
+	}
 }
 
 function render(pointer) {
-    game.debug.text('Active star: ' + that.captain.hook.countLiving() + ' / ' + that.captain.hook.total + " x:" + that.captain.body.x + "	px:" + game.input.x + " HP:" + that.captain.hp, 32, 32);
+    game.debug.text('Active star: ' + that.captain.isShooting + " x:" + that.captain.body.x + "	y:" + that.captain.body.y + " player ID:" + that.captain.playerID + " total other players:" + that.arrayOfPlayer.length+ " HP:" + that.captain.hp, 32, 32);
     //game.debug.spriteInfo(sprite, 32, 450);
 }
 
@@ -210,6 +202,9 @@ function getLocalPlayer() {
     return that.captain;
 };
 
+function getLocalHook() {
+	return that.hook1;
+};
 function agreeJoin(_x, _y, _pid) {
     that.captain.init(_x, _y, _pid);
     that.captain.body.x = _x;
@@ -217,21 +212,22 @@ function agreeJoin(_x, _y, _pid) {
     console.log('ok');
 };
 
-function addPlayer(x, y, pid) {
-    this.arrayOfPlayer.push(new Captain(this.game, x, y, pid));
+function addPlayer(_x, _y,_pid) {
+    this.arrayOfPlayer.push(new Captain(this.game, _x, _y, _pid));
 };
 
 function updatePlayerPosition(_x, _y, pid) {
-    this.arrayOfPlayer.forEach(function(p) {
-        if (p.playerID == pid) {
-            p.body.x = _x;
-            p.body.y = _y;
-        }
-    });
+	this.arrayOfPlayer.forEach(function(p) {
+		if (p.playerID == pid) {
+			p.body.x = _x;
+			p.body.y = _y;
+		}
+	});
 };
 
 function clearAllPlayers() {
     this.arrayOfPlayer.forEach(function(p) {
+		p.body.kill();
         delete p;
     });
 };
@@ -240,23 +236,25 @@ function clearAllPlayers() {
 function removePlayer(pid) {
     this.arrayOfPlayer.forEach(function(p) {
         if (p.playerID == pid) {
+			p.body.kill();
             delete p;
         }
     });
 };
 
 function updateHookPosition(_x, _y, _pid) {
-    this.arrayOfPlayer.forEach(function(p){
-        if (p.playerID == _pid) {
-            var hook = p.hook;
-            if (hook.countLiving() < 1) {
-                hook = hook.getFirstDead();
-                //set bullet starting position
-                hook.reset(p.body.x - 5, p.body.y - 5);
-            }
-            hook.body.x = _x;
-            hook.body.y = _y;
-        }
-    });
+	//this.arrayOfPlayer.forEach(function(p){
+	for(var i=0;i<this.arrayOfPlayer.length;i++){
+		var p = this.arrayOfPlayer[i];
+		if (p.playerID == _pid) {
+			if (!p.isShooting) {
+				p.createHook(p.body.x+5,p.body.y+5);
+				p.isShooting=true;
+			}	
+			p.hook.body.x = _x;
+			p.hook.body.y = _y;
+		}
+	}
+	//});
 };
 

@@ -1,11 +1,14 @@
 function Captain(game,xPos,yPos,sid){
 	
+	/*
     this.hook = game.add.group();
     this.hook.enableBody = true;
     this.hook.physicsBodyType = Phaser.Physics.ARCADE;
     this.hook.createMultiple(50, 'star');
     this.hook.setAll('checkWorldBounds', true);	
-    //this.hook.setAll('outOfBoundsKill', true);
+	*/
+	
+	this.hook;
 	
 	this.body = game.add.sprite(xPos,yPos,'dude')
 	this.body.anchor.set(0.5);
@@ -23,11 +26,10 @@ function Captain(game,xPos,yPos,sid){
 	this.teamID;
 	this.playerID;
 	this.leftOrRight;
-	this.hookedPillar;
 	this.hookedPlayer;
 	this.hookReturn;
 	this.isShooting = false;
-	
+	this.beingHooked = false;
 	//Constructor
 	this.initialX = xPos;
 	this.initialY = yPos;
@@ -38,12 +40,18 @@ function Captain(game,xPos,yPos,sid){
 	this.playerID = sid;
 	this.teamID = sid%2;
 	this.leftOrRight = sid;
-	this.hookedPillar = false;
-	this.hookedPlayer = false;
+	this.hookedPlayer = -1;
 	this.xVelocity = this.body.body.velocity.x;
 	this.yVelocity = this.body.body.velocity.y;
 	this.hookReturn =false;
-
+	
+	/*
+	this.hud = Phaser.Plugin.HUDManager.create(game, this, 'captainHUD');
+  	this.healthHUD = this.hud.addBar(0,-20, 32, 2, 100, 'hp', this, Phaser.Plugin.HUDManager.HEALTHBAR, false);
+  	this.healthHUD.bar.anchor.setTo(0.5, 0.5);
+  	this.sprite.addChild(this.healthHUD.bar);
+	*/
+	
 	this.init = function(xPos, yPos, sid) {
 		this.initialX = xPos;
 		this.initialY = yPos;
@@ -78,4 +86,11 @@ Captain.prototype.respawn = function(){
 	this.xVelocity = 0;
 	this.yVelocity = 0;
 	this.hp = 100;
-};
+}
+
+Captain.prototype.createHook = function(_x,_y){
+	this.hook = game.add.sprite(_x+10,_y+10,'star');
+	this.hook.anchor.set(0.5);
+	game.physics.enable(this.hook,Phaser.Physics.ARCADE);
+	this.hook.body.collideWorldBounds = false;
+}
