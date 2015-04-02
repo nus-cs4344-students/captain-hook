@@ -110,6 +110,24 @@ function CHServer(sock) {
                             }
                         }
                         break;
+					
+					case "update-hooked-player":
+						var pid = message.id;
+						var hid = message.hid;
+						for (var i in sockets) {
+                            if (i != pid) {
+                                if (sockets[i] !== undefined) {
+                                    unicast(sockets[i], {
+                                        type:"update",
+                                        id: hid,
+                                        x: message.x,
+                                        y: message.y
+                                    });
+                                }
+                            }
+                        }
+						
+						break;
 
                     default:
                         console.log("Unhandled " + message.type);
