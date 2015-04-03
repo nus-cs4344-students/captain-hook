@@ -10,11 +10,11 @@ function Captain(game,xPos,yPos,sid){
 	
 	this.hook;
 	
-	this.body = game.add.sprite(xPos,yPos,'dude')
-	this.body.anchor.set(0.5);
-	game.physics.enable(this.body, Phaser.Physics.ARCADE);
-	this.body.body.allowRotation = false;
-	this.body.body.collideWorldBounds = true;
+	this.sprite = game.add.sprite(xPos,yPos,'dude')
+	this.sprite.anchor.set(0.5);
+	game.physics.enable(this.sprite, Phaser.Physics.ARCADE);
+	this.sprite.body.allowRotation = false;
+	this.sprite.body.collideWorldBounds = true;
 	
 	//Public variables
 	this.initialX;
@@ -42,8 +42,8 @@ function Captain(game,xPos,yPos,sid){
 	this.teamID = sid%2;
 	this.leftOrRight = sid;
 	this.hookedPlayer = -1;
-	this.xVelocity = this.body.body.velocity.x;
-	this.yVelocity = this.body.body.velocity.y;
+	this.xVelocity = this.sprite.body.velocity.x;
+	this.yVelocity = this.sprite.body.velocity.y;
 	this.hookReturn =false;
 	
 	/*
@@ -75,6 +75,16 @@ function Captain(game,xPos,yPos,sid){
 		game.physics.enable(this.hook,Phaser.Physics.ARCADE);
 		this.hook.body.collideWorldBounds = false;
 	}
+	
+	this.disableCollision = function(){
+		this.sprite.body.checkCollision.left=false;
+		this.sprite.body.checkCollision.right=false;
+	}
+	
+	this.enableCollision = function (){
+		this.sprite.body.checkCollision.left=true;
+		this.sprite.body.checkCollision.right=true;
+	}
 
 }
 
@@ -90,8 +100,8 @@ Captain.prototype.respawn = function(){
 	//console.log("character respawned");
 	this.x = this.initialX;
 	this.y = this.initialY;
-	this.body.body.x = this.initialX;
-	this.body.body.y = this.initialY;
+	this.sprite.body.x = this.initialX;
+	this.sprite.body.y = this.initialY;
 	this.xVelocity = 0;
 	this.yVelocity = 0;
 	this.hp = 100;

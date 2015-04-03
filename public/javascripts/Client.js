@@ -20,8 +20,8 @@ function Client() {
 		if(player.isMoving || player.beingHooked){
 			sendToServer({type:"update",
 							id: player.playerID,
-							x: player.body.x,
-							y: player.body.y});
+							x: player.sprite.x,
+							y: player.sprite.y});
 		}
 		
         if (player.isShooting) {
@@ -36,8 +36,8 @@ function Client() {
 			sendToServer({type:"update-hooked-player",
 							id: player.playerID,
 							hid: player.hookedPlayer,
-							x: player.hook.x,
-							y: player.hook.y});
+							x: player.hook.body.x,
+							y: player.hook.body.y});
 		}
     };
 	
