@@ -27,6 +27,10 @@ node_modules
 # Users Environment Variables
 .lock-wscript
 
+<<<<<<< HEAD
 # Intellij I
+=======
+# for intellij idea
+>>>>>>> fecbbf17150f88758d6fba74f9afe11cd26bff85
 .idea
 *.iml
