@@ -83,9 +83,8 @@ function update() {
                     game.physics.arcade.moveToObject(that.hook1, that.captain.sprite, 200);
                     game.physics.arcade.moveToObject(temp, that.captain.sprite, 200);
                     if (game.physics.arcade.distanceBetween(that.hook1, that.captain.sprite) < 25) {
-                        //console.log("reach local player...");
+
                         that.hook1.kill();
-						
 						// identify which player has being hooked, set the attribute
 						that.arrayOfPlayer.forEach(function(p) {
 							if (p.playerID == that.captain.hookedPlayer) {
@@ -97,7 +96,7 @@ function update() {
 						that.captain.isShooting = false;
                         temp.body.velocity.x = 0;
                         temp.body.velocity.y = 0;
-						that.arrayOfPlayer[i].enableCollision();
+						//that.arrayOfPlayer[i].enableCollision();
                         clearInterval(back1);
                     }
                 }, 10)
@@ -276,11 +275,12 @@ function updateHookPosition(_x, _y, _pid) {
 		if (p.playerID == _pid) {
 			if (!p.isShooting) {
 				p.createHook(p.sprite.x+5,p.sprite.y+5);
-				p.isShooting = true;
-			}	
-
-			p.hook.body.velocity.x = _x;
-			p.hook.body.velocity.y = _y;
+			}
+			p.setHookPosition(_x,_y);
+			
+			if(game.physics.arcade.distanceBetween(p.sprite,p.hook)<60){
+				p.killHook();
+			}
 		}
 	}
 };

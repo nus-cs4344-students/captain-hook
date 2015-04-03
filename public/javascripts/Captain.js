@@ -74,6 +74,7 @@ function Captain(game,xPos,yPos,sid){
 		this.hook.anchor.set(0.5);
 		game.physics.enable(this.hook,Phaser.Physics.ARCADE);
 		this.hook.body.collideWorldBounds = false;
+		this.isShooting = true;
 	}
 	
 	this.disableCollision = function(){
@@ -85,7 +86,16 @@ function Captain(game,xPos,yPos,sid){
 		this.sprite.body.checkCollision.left=true;
 		this.sprite.body.checkCollision.right=true;
 	}
-
+	
+	this.setHookPosition = function(_x,_y){
+		this.hook.x= _x;
+		this.hook.y = _y;
+	}
+	
+	this.killHook = function(){
+		this.hook.kill();
+		this.isShooting = false;
+	}
 }
 
 // Public method: takeDmg()
