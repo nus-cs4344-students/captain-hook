@@ -148,8 +148,16 @@ function CHServer(sock) {
     var newPlayer = function (conn) {
         nextPID ++;
         // Create player object and insert into players with key = conn.id
-        players[conn.id] = new Player(100, 100, conn.id, conn);
+		var team = nextPID%2;
+		if(team ==1){
+			players[conn.id] = new Player(100,100*nextPID,conn.id,conn);
+		}
+		else{
+			players[conn.id] = new Player(700,100*(nextPID-1),conn.id,conn);
+		}
+        //players[conn.id] = new Player(100, 100, conn.id, conn);
         players[conn.id].pid = nextPID;
+		players[conn.id].teamID = nextPID%2;
         sockets[nextPID] = conn;
         console.log('New player ' + conn.id + ' added.\n');
     };

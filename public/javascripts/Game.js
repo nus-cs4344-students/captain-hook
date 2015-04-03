@@ -30,11 +30,11 @@ function create() {
     ledge2.scale.setTo(0.5, 1.5);
     ledge2.body.immovable = true;
 
-    pillar1 = platforms.create(700, 100, 'ground');
+    pillar1 = platforms.create(650, 100, 'ground');
     pillar1.scale.setTo(0.5, 0.04);
     pillar1.body.immovable = true;
 
-    pillar2 = platforms.create(700, 500, 'ground');
+    pillar2 = platforms.create(650, 500, 'ground');
     pillar2.scale.setTo(0.5, 0.04);
     pillar2.body.immovable = true;
 

@@ -4,8 +4,12 @@ function Player(_x, _y, _pid, _socket)
 {
     this.x = _x;
     this.y = _y;
+	this.vx = 0;
+	this.vy = 0;
+	this.hp = 100;
     this.name = _pid;
     this.pid = _pid;
+	this.teamID = _pid;
     this.room = null;
     this.socket = _socket;
     this.is_ready = false;
