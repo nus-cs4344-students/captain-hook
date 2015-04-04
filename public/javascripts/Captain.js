@@ -9,6 +9,12 @@ function Captain(game,xPos,yPos,sid){
 	*/
 	
 	this.hook;
+	this.hookDestinationX;
+	this.hookDestinationY;
+	this.hookSourceX;
+	this.hookSourceY;
+	this.hookVelocityX=0;
+	this.hookVelocityY=0;
 	
 	this.sprite = game.add.sprite(xPos,yPos,'dude')
 	this.sprite.anchor.set(0.5);

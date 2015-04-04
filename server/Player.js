@@ -5,6 +5,9 @@ function Player(_x, _y, _pid, _socket)
     this.y = _y;
 	this.vx = 0;
 	this.vy = 0;
+	this.hx;
+	this.hy;
+	this.readyFlag = true;
 	this.hp = 100;
     this.name = _pid;
     this.pid = _pid;
@@ -88,10 +91,57 @@ function Player(_x, _y, _pid, _socket)
         }
     };
 	
-	this.calculatePosition = function(_vx,_vy){
-		this.x += _vx*0.025;
-		this.y += _vy*0.025;
+	this.calculatePosition = function(_vx,_vy,_hvx,_hvy,_sx,_sy,_beHooked,_isShooting){
+		if(!_isShooting){
+			readyFlag = true;
+		}
+		if(_beHooked){
+			if(readyFlag){
+				this.x = _sx;
+				this.y = _sy;
+				readyFlag = false;
+			}
+			this.x+=_hvx*0.02602;
+			this.y+=_hvy*0.02602;
+		}
+		else{
+			this.x += _vx*0.02602;
+			this.y += _vy*0.02602;
+		}
+		
 	};
+	
+	this.calculateHookPosition = function (_px,_py){
+		var directionX;
+		var directionY;
+		directionX = _px-this.hx;
+		directionY = _py-this.hy;
+		
+		this.hx += 0.025 * directionX * 300;
+		this.hy += 0.025 * directionY * 300;
+		/*
+		if(_px>this.hx){
+			distanceBetweenX = _px-this.hx;
+		}
+		else{
+			distanceBetweenX = this.hx-_px;
+		}
+		if(_py>this.hy){
+			distanceBetweenY = _py - this.hy;
+		}
+		else{
+			distanceBetweenY = this.hy - _py;
+		}
+		var reachedTarget;
+		if((distanceBetweenX<15)&&(distanceBetweenY<15)){
+			reachedTarget = true;
+		}
+		else{
+			reachedTarget = false;
+		}
+		*/
+		
+	}
 }
 
 global.Player = Player;

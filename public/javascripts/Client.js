@@ -18,18 +18,27 @@ function Client() {
         var player = getLocalPlayer();
 		var hook = getLocalHook();
 		//if(player.isMoving || player.beingHooked){
-		if((player.isMoving)&&(!player.isCollide)){
+		
+		if(((player.isMoving)&&(!player.isCollide))||(player.beingHooked)){
 			sendToServer({type:"update",
 							id: player.playerID,
 							vx: player.sprite.body.velocity.x,
-							vy: player.sprite.body.velocity.y});
+							vy: player.sprite.body.velocity.y,
+							hvx: player.hookVelocityX,
+							hvy: player.hookVelocityY,
+							sx: player.hookSourceX,
+							sy: player.hookSourceY,
+							beHooked: player.beingHooked,
+							isShooting: player.isShooting});		
 		}
 		
         if (player.isShooting) {
             sendToServer({type:"hook",
                 id: player.playerID,
-                x: hook.x,
-				y: hook.y});
+                x: player.hook.x,
+				y: player.hook.y,
+				px: player.hookDestinationX,
+				py: player.hookDestinationY});
         }
 
 		if (player.hookedPlayer != -1) {

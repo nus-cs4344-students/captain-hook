@@ -92,6 +92,8 @@ function update() {
                     if (game.physics.arcade.distanceBetween(that.hook1, that.captain.sprite) < 25) {
 
                         that.hook1.kill();
+						that.captain.hookVelocityX = 0;
+						that.captain.hookVelocityY = 0;
 						// identify which player has being hooked, set the attribute
 						that.arrayOfPlayer.forEach(function(p) {
 							if (p.playerID == that.captain.hookedPlayer) {
@@ -122,6 +124,8 @@ function update() {
                     game.physics.arcade.moveToObject(that.captain.sprite, that.hook1, 200);
                     if (game.physics.arcade.distanceBetween(that.hook1, that.captain.sprite) < 25) {
                         that.hook1.kill();
+						that.captain.hookVelocityX = 0;
+						that.captain.hookVelocityY = 0;
 						that.captain.isShooting = false;
 						that.captain.beingHooked = false;
                         that.captain.sprite.body.velocity.x = 0;
@@ -164,6 +168,8 @@ function update() {
                 if (game.physics.arcade.distanceBetween(that.hook1, that.captain.sprite) < 50) {
                     that.captain.hookReturn = false;
                     that.hook1.kill();
+					that.captain.hookVelocityX = 0;
+					that.captain.hookVelocityY = 0;
                     clearInterval(back3);
                     that.captain.isShooting = false; // the hook is stop shooting
                 }
@@ -179,6 +185,9 @@ function update() {
     if (game.input.activePointer.isDown) {
         fire();
     }
+	else if(that.captain.beingHooked){
+		that.captain.isMoveing = false;
+	}
     else if (cursors.left.isDown) {
         that.captain.sprite.body.velocity.x = -100;
 		that.captain.isMoving = true;
@@ -209,11 +218,19 @@ function fire() {
 		that.captain.createHook(that.captain.sprite.x,that.captain.sprite.y);
 		that.hook1 = that.captain.hook;
 		game.physics.arcade.moveToPointer(that.hook1,300);
+		that.captain.hookVelocityX = that.captain.hook.body.velocity.x/1.496;
+		that.captain.hookVelocityY = that.captain.hook.body.velocity.y/1.496;
+		that.captain.hookSourceX = that.captain.sprite.x;
+		that.captain.hookSourceY = that.captain.sprite.y;
+		that.captain.hookDestinationX = game.input.x;
+		that.captain.hookDestinationY = game.input.y;
 	}
 }
 
 function render(pointer) {
     game.debug.text('Active star: ' + that.captain.isShooting + " x:" + that.captain.sprite.x + "	y:" + that.captain.sprite.y + " player ID:" + that.captain.playerID + " total other players:" + that.arrayOfPlayer.length+ " HP:" + that.captain.hp, 32, 32);
+	game.debug.text("being hooked: "+that.captain.beingHooked+" is moving: "+ that.captain.isMoving +" is collide: " + that.captain.isCollide,32,50);
+	game.debug.text("hvx: "+that.captain.hookVelocityX+" hvy: "+ that.captain.hookVelocityY,32,68);
     //game.debug.spriteInfo(sprite, 32, 450);
 }
 
@@ -285,7 +302,7 @@ function updateHookPosition(_x, _y, _pid) {
 			}
 			p.setHookPosition(_x,_y);
 			
-			if(game.physics.arcade.distanceBetween(p.sprite,p.hook)<60){
+			if(game.physics.arcade.distanceBetween(p.sprite,p.hook)<30){
 				p.killHook();
 			}
 		}

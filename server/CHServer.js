@@ -87,20 +87,25 @@ function CHServer(sock) {
                         // A player has asked to hook.  Create
                         // tell everyone (excluding the player)
                         var pid = players[conn.id].pid;
+						players[conn.id].calculateHookPosition(message.px,message.py);
+						var newHX = players[conn.id].hx;
+						var newHY = players[conn.id].hy;
                         broadcastUnless({
                             type:"hook",
                             id: pid,
-                            x: message.x,
-                            y: message.y
+                            //x: newHX,
+                            //y: newHY
+							x:message.x,
+							y:message.y
                         }, pid);
                         break;
 
                     case "update":
                         var pid = message.id;
-						players[conn.id].calculatePosition(message.vx,message.vy);
+						players[conn.id].calculatePosition(message.vx,message.vy,message.hvx,message.hvy,message.sx,message.sy,message.beHooked,message.isShooting);
 						var newX = players[conn.id].x;
 						var newY = players[conn.id].y;
-						var newHP = player[conn.id].hp;
+						var newHP = players[conn.id].hp;
                         // and tell everyone.
                         for (var i in sockets) {
                             if (i != pid) {
