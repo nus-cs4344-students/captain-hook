@@ -15,23 +15,12 @@ function Captain(game,xPos,yPos,sid){
 	game.physics.enable(this.sprite, Phaser.Physics.ARCADE);
 	this.sprite.body.allowRotation = false;
 	this.sprite.body.collideWorldBounds = true;
-	
-	//Public variables
-	this.initialX;
-	this.initialY;
+
+	//Constructor
 	this.isMoving = false;
-	this.xVelocity;
-	this.yVelocity;
-	this.health;
-	this.hookID;
-	this.teamID;
-	this.playerID;
-	this.leftOrRight;
-	this.hookedPlayer;
-	this.hookReturn;
 	this.isShooting = false;
 	this.beingHooked = false;
-	//Constructor
+	this.isCollide = false;
 	this.initialX = xPos;
 	this.initialY = yPos;
 	this.xVelocity = 0;

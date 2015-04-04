@@ -15,6 +15,8 @@ var arrayOfPillar = [];
 var that = this;
 var cursors;
 
+var ledge1;
+var ledge2;
 
 function create() {
     game.physics.startSystem(Phaser.Physics.ARCADE);
@@ -63,8 +65,13 @@ function update() {
     for (var i = 0; i < that.arrayOfPlayer.length; i++) {
         game.physics.arcade.collide(that.arrayOfPlayer[i].sprite, platforms);
     }
+	if(game.physics.arcade.collide(that.captain.sprite, platforms)){
+		that.captain.isCollide = true;
+	}
+	else{
+		that.captain.isCollide = false;
+	}
 
-    game.physics.arcade.collide(that.captain.sprite, platforms);
 
     if (!that.captain.hookReturn) {
         //check collision between local hook and other player, this part should be in server
@@ -164,7 +171,7 @@ function update() {
         }
 	}
 
-    that.captain.sprite.rotation = game.physics.arcade.angleToPointer(that.captain.sprite);
+    //that.captain.sprite.rotation = game.physics.arcade.angleToPointer(that.captain.sprite);
     that.captain.sprite.body.velocity.x = 0;
     that.captain.sprite.body.velocity.y = 0;
 
@@ -173,20 +180,20 @@ function update() {
         fire();
     }
     else if (cursors.left.isDown) {
-        that.captain.sprite.body.velocity.x -= 100;
+        that.captain.sprite.body.velocity.x = -100;
 		that.captain.isMoving = true;
     }
     else if (cursors.right.isDown) {
-        that.captain.sprite.body.velocity.x += 100;
+        that.captain.sprite.body.velocity.x = 100;
 		that.captain.isMoving = true;
     }
 
     else if (cursors.up.isDown) {
-        that.captain.sprite.body.velocity.y -= 100;
+        that.captain.sprite.body.velocity.y = -100;
 		that.captain.isMoving = true;
     }
     else if (cursors.down.isDown) {
-        that.captain.sprite.body.velocity.y += 100;
+        that.captain.sprite.body.velocity.y = 100;
 		that.captain.isMoving = true;
     }
 	else {

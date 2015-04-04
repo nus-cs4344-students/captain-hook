@@ -17,11 +17,12 @@ function Client() {
     var updateLoop = function() {
         var player = getLocalPlayer();
 		var hook = getLocalHook();
-		if(player.isMoving || player.beingHooked){
+		//if(player.isMoving || player.beingHooked){
+		if((player.isMoving)&&(!player.isCollide)){
 			sendToServer({type:"update",
 							id: player.playerID,
-							x: player.sprite.x,
-							y: player.sprite.y});
+							vx: player.sprite.body.velocity.x,
+							vy: player.sprite.body.velocity.y});
 		}
 		
         if (player.isShooting) {

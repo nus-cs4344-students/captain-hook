@@ -18,6 +18,7 @@ function CHServer(sock) {
     var players = {}; // Associative array for players, indexed via socket ID
 
     var gameLoop = function() {
+
     };
 
     this.start = function() {
@@ -96,6 +97,10 @@ function CHServer(sock) {
 
                     case "update":
                         var pid = message.id;
+						players[conn.id].calculatePosition(message.vx,message.vy);
+						var newX = players[conn.id].x;
+						var newY = players[conn.id].y;
+						var newHP = player[conn.id].hp;
                         // and tell everyone.
                         for (var i in sockets) {
                             if (i != pid) {
@@ -103,8 +108,9 @@ function CHServer(sock) {
                                     unicast(sockets[i], {
                                         type:"update",
                                         id: message.id,
-                                        x: message.x,
-                                        y: message.y
+                                        x: newX,
+                                        y: newY,
+										hp: newHP
                                     });
                                 }
                             }

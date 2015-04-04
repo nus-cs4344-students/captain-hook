@@ -1,4 +1,3 @@
-"use strict";
 
 function Player(_x, _y, _pid, _socket)
 {
@@ -87,7 +86,12 @@ function Player(_x, _y, _pid, _socket)
             console.log("[!] " + this.name + " left room " + this.room.name);
             this.room = null;
         }
-    }
+    };
+	
+	this.calculatePosition = function(_vx,_vy){
+		this.x += _vx*0.025;
+		this.y += _vy*0.025;
+	};
 }
 
 global.Player = Player;
