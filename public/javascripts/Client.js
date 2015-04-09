@@ -9,7 +9,8 @@ function Client() {
     var pillars = [];
     var cursors;
     var ready = false;
-
+	var myTeamScore = 0;
+	var opponentTeamScore = 0;
     //var that = this;
 
     var game = new Phaser.Game(800, 600, Phaser.CANVAS, 'captain-hook', { preload: preload, create: create, update: update, render: render });
@@ -141,13 +142,14 @@ function Client() {
 					isShoot = message.isShoot;
 					beingHooked = message.beingHooked;
 					killHook = message.killHook;
-                    captains[playerId].update(playerNewPos_x, playerNewPos_y, playerHp, hookNewPos_x, hookNewPos_y,beingHooked,hookReturn,killHook,isShoot);
+					respawn = message.respawn;
+                    captains[playerId].update(playerNewPos_x, playerNewPos_y, playerHp, hookNewPos_x, hookNewPos_y,beingHooked,hookReturn,killHook,isShoot,respawn);
+					if(myCaptain.playerID==message.id){
+						myTeamScore = message.playerTeamScore;
+						opponentTeamScore = message.opponentTeamScore;
+					}
                     break;
 
-                case "hook":
-                    console.log('Player is shooting : ' + message.id);
-                    updateHookPosition(message.x, message.y, message.id);
-                    break;
                 default:
                     console.log("error: undefined command " + message.type);
             }
@@ -215,7 +217,10 @@ function Client() {
      */
     function render(pointer) {
         if (!ready) return;
-        game.debug.text(" x:" + myCaptain.sprite.body.x + "   y:" + myCaptain.sprite.body.y + " player ID:" + myCaptain.playerID + " total other players:" + captains.length+ " HP:" + myCaptain.hp, 32, 32);
+		game.debug.text(" player ID: "+myCaptain.playerID+" team ID: "+myCaptain.teamID+" HP: "+myCaptain.hp,32,32);
+		game.debug.text(" my team score: "+ myTeamScore+" opponent team score: "+opponentTeamScore,32,54);
+        //game.debug.text(" x:" + myCaptain.sprite.body.x + "   y:" + myCaptain.sprite.body.y + " player ID:" + myCaptain.playerID + " total other players:" + captains.length+ " HP:" + myCaptain.hp+" team ID: "+myCaptain.teamID, 32, 32);
+		//game.debug.text(" isShoot: "+ myCaptain.isShooting + " killHook: " + myCaptain.killHook + " hookReturn: "+myCaptain.hookReturn + " beingHooked: "+myCaptain.beingHooked + " respawn: "+myCaptain.respawn,32,54);
         //game.debug.spriteInfo(sprite, 32, 450);
     }
 }

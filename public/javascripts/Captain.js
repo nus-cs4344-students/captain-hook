@@ -26,6 +26,8 @@ function Captain(game,xPos,yPos,sid){
 	this.killHook = false;
 	this.isHookCreated = false;
 	this.isShooting = false;
+	this.beingHooked = false;
+	this.respawn = false;
 	
 	this.hud = Phaser.Plugin.HUDManager.create(game, this, 'captainHUD');
   	this.healthHUD = this.hud.addBar(0,-20, 32, 2, 100, 'hp', this, Phaser.Plugin.HUDManager.HEALTHBAR, false);
@@ -69,29 +71,16 @@ function Captain(game,xPos,yPos,sid){
 	}
 }
 
-// Public method: takeDmg()
-// remark: if two characters are getting nearer, automatically deduct their own HP
-Captain.prototype.takeDmg = function(counter){
-	this.hp = this.hp-1*counter;
-	//console.log("number of nearer opponents: "+counter);
-}
 
-// Public method: respawn()
-Captain.prototype.respawn = function(){
-	//console.log("character respawned");
-	this.x = this.initialX;
-	this.y = this.initialY;
-	this.sprite.x = this.initialX;
-	this.sprite.y = this.initialY;
-	this.xVelocity = 0;
-	this.yVelocity = 0;
-	this.hp = 100;
-}
-
-Captain.prototype.update = function(x, y, hp, hook_x, hook_y,beingHooked,hookReturn,killHook,isShoot) {
+Captain.prototype.update = function(x, y, hp, hook_x, hook_y,beingHooked,hookReturn,killHook,isShoot,respawn) {
 	this.sprite.x = x;
 	this.sprite.y = y;
 	this.hp = hp;
+	this.isShooting = isShoot;
+	this.killHook = killHook;
+	this.hookReturn = hookReturn;
+	this.beingHooked = beingHooked;
+	this.respawn = respawn;
 	// if there is hook position, check if hook exist alr, if not create hook
 	if (isShoot) {
 		// Check if hook already exist
@@ -106,5 +95,11 @@ Captain.prototype.update = function(x, y, hp, hook_x, hook_y,beingHooked,hookRet
 	if ((killHook)&&(this.isHookCreated)){
 		this.hook.kill();
 		this.isHookCreated = false;
+	}
+	if (respawn){
+		this.sprite.x = this.initialX;
+		this.sprite.y = this.initialY;
+		this.hp = 100;
+		this.respawn = false;
 	}
 }

@@ -16,6 +16,8 @@ function CHServer(sock) {
     var socket = sock;
     var sockets = {}; // Associative array for sockets, indexed via player ID
     var players = {}; // Associative array for players, indexed via socket ID
+	var team1Score = 0;
+	var team0Score = 0;
 
 	/*
 		scenario 1:
@@ -90,13 +92,7 @@ function CHServer(sock) {
 			p1 = players[i];
 			if(p1.isShoot){
 				if(p1.hookPillar){
-					p1.beingHooked = true;
 					p1.calculatePositionByPillar(p1.hx,p1.hy);
-					if(distanceBetweenTwoPoints(p1.x,p1.y,p1.hx,p1.hy)<10){
-						p1.hookPillar = false;
-						p1.beingHooked = false;
-						p1.isShoot = false;
-					}
 				}
 				else{
 					//for(var j=0;j<players.length;j++){
@@ -109,10 +105,7 @@ function CHServer(sock) {
 								}
 								p1.hookReturn = true;
 								p2.beingHooked = true;
-								p2.calculatePositionByHook(p1.hx,p1.hy);
-							}
-							if(distanceBetweenTwoPoints(p1.x,p1.y,p2.x,p2.y)<10){
-								p2.beingHooked = false;
+								p2.calculatePositionByHook(p1.x,p1.y);
 							}
 						}
 					}
@@ -135,11 +128,38 @@ function CHServer(sock) {
 			}
 		}
 		
+		//respawn if any player's hp reach 0
+		for(var i in players){
+			var p = players[i];
+			p.respawn = false;
+			if(p.hp<1){
+				p.x = p.initialX;
+				p.y = p.initialY;
+				p.hp = 100;
+				p.respawn = true;
+				if(p.teamID==0){
+					team1Score++;
+				}
+				else{
+					team0Score++;
+				}
+			}
+		}
 		//console.log(players.length);
 		//for(var i=0;i<players.length;i++){
 		for(var i in players){
 			//console.log("broadcasting");
 			var p = players[i];
+			var playerTeamScore;
+			var opponentTeamScore;
+			if(p.teamID==1){
+				playerTeamScore=team1Score;
+				opponentTeamScore = team0Score;
+			}
+			else{
+				playerTeamScore=team0Score;
+				opponentTeamScore = team1Score;
+			}
 			broadcast({
 				type:"update", 
 				id: p.pid,
@@ -151,7 +171,11 @@ function CHServer(sock) {
 				beingHooked: p.beingHooked,
 				hookReturn: p.hookReturn,
 				killHook: p.killHook,
-				isShoot: p.isShoot
+				isShoot: p.isShoot,
+				respawn:p.respawn,
+				teamID: p.teamID,
+				playerTeamScore:playerTeamScore,
+				opponentTeamScore:opponentTeamScore
 			})
 		}
     };
