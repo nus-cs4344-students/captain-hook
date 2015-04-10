@@ -8,9 +8,12 @@ function Client() {
     var isMyHookThrown = false;
     var pillars = [];
     var cursors;
+	var wKey;
+	var sKey;
     var ready = false;
 	var myTeamScore = 0;
 	var opponentTeamScore = 0;
+	var delay=0;
     //var that = this;
 
     var game = new Phaser.Game(800, 600, Phaser.CANVAS, 'captain-hook', { preload: preload, create: create, update: update, render: render });
@@ -54,6 +57,8 @@ function Client() {
         game.stage.backgroundColor = '#313131';
 
         cursors = game.input.keyboard.createCursorKeys();
+		wKey = game.input.keyboard.addKey(Phaser.Keyboard.W);
+		sKey = game.input.keyboard.addKey(Phaser.Keyboard.S);
 
         //server do this, client just nid update positions.
         pillars[0] = pillar1;
@@ -62,19 +67,7 @@ function Client() {
         pillars[3] = pillar4;
     }
 
-    /*
-     * private method: showMessage(location, msg)
-     *
-     * Display a text message on the web page.  The
-     * parameter location indicates the class ID of
-     * the HTML element, and msg indicates the message.
-     *
-     * The new message replaces any existing message
-     * being shown.
-     */
-    var showMessage = function(location, msg) {
-        document.getElementById(location).innerHTML = msg;
-    };
+
 
     /*
      * private method: sendToServer(msg)
@@ -85,6 +78,9 @@ function Client() {
      */
     var sendToServer = function (msg) {
         console.log("send-> " + JSON.stringify(msg));
+		var date = new Date();
+		var currentTime = date.getTime();
+		msg["timestamp"] = currentTime;
         sock.send(JSON.stringify(msg));
     }
 
@@ -132,6 +128,10 @@ function Client() {
 
                 case "update":
                     console.log('Update position for ' + message.id);
+					var t = message.timestamp;
+					if(t<captains[message.id].lastUpdate){
+						break;
+					}
                     playerId = message.id;
                     playerNewPos_x = message.x;
                     playerNewPos_y = message.y;
@@ -143,7 +143,8 @@ function Client() {
 					beingHooked = message.beingHooked;
 					killHook = message.killHook;
 					respawn = message.respawn;
-                    captains[playerId].update(playerNewPos_x, playerNewPos_y, playerHp, hookNewPos_x, hookNewPos_y,beingHooked,hookReturn,killHook,isShoot,respawn);
+					timestamp = message.timestamp;
+                    captains[playerId].update(playerNewPos_x, playerNewPos_y, playerHp, hookNewPos_x, hookNewPos_y,beingHooked,hookReturn,killHook,isShoot,respawn,timestamp);
 					if(myCaptain.playerID==message.id){
 						myTeamScore = message.playerTeamScore;
 						opponentTeamScore = message.opponentTeamScore;
@@ -188,8 +189,8 @@ function Client() {
             cursorDirection = "down";
         } else {
             isKeyDown = false;
-        }
-
+        } 
+		
         if (isKeyDown || isThrowHook) {
             sendToServer({type:"playerAction",
                             id: myCaptain.playerID,
@@ -197,7 +198,21 @@ function Client() {
                             isThrowHook: isThrowHook,
                             mouse_x: game.input.x,
                             mouse_y: game.input.y});
-        }       
+        }    
+		
+		if (wKey.isDown){
+			delay += 20;
+			sendToServer({type:"delay", delay:delay});
+		} else if (sKey.isDown) {
+			if (delay >= 20) {
+				delay -= 20;
+				// Send event to server
+				sendToServer({type:"delay", delay:delay});
+			}
+		}
+		
+
+   
     }
 
      
@@ -217,10 +232,11 @@ function Client() {
      */
     function render(pointer) {
         if (!ready) return;
-		game.debug.text(" player ID: "+myCaptain.playerID+" team ID: "+myCaptain.teamID+" HP: "+myCaptain.hp,32,32);
-		game.debug.text(" my team score: "+ myTeamScore+" opponent team score: "+opponentTeamScore,32,54);
+		//game.debug.text(" player ID: "+myCaptain.playerID+" team ID: "+myCaptain.teamID+" HP: "+myCaptain.hp,32,32);
+		//game.debug.text(" my team score: "+ myTeamScore+" opponent team score: "+opponentTeamScore,32,54);
         //game.debug.text(" x:" + myCaptain.sprite.body.x + "   y:" + myCaptain.sprite.body.y + " player ID:" + myCaptain.playerID + " total other players:" + captains.length+ " HP:" + myCaptain.hp+" team ID: "+myCaptain.teamID, 32, 32);
 		//game.debug.text(" isShoot: "+ myCaptain.isShooting + " killHook: " + myCaptain.killHook + " hookReturn: "+myCaptain.hookReturn + " beingHooked: "+myCaptain.beingHooked + " respawn: "+myCaptain.respawn,32,54);
+		game.debug.text("last time update for my character: "+myCaptain.lastUpdate+ " delay: "+delay+" ms",32,32);
         //game.debug.spriteInfo(sprite, 32, 450);
     }
 }

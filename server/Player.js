@@ -26,7 +26,20 @@ function Player(_x, _y, _pid, _socket)
     this.room = null;
     this.socket = _socket;
     this.is_ready = false;
+	this.delay = 0;
+	this.lastUpdate = new Date().getTime();
 
+	this.getDelay = function() {
+        var errorPercentage = 20;
+        var to = this.delay + errorPercentage*this.delay/100;
+        var from = this.delay - errorPercentage*this.delay/100;
+        if (this.delay != 0) {
+            return Math.floor(Math.random() * (to - from + 1) + from);
+        } else {
+            return 0;
+        }
+    }
+	
     this.Ready = function()
     {
         if (this.room != null)
@@ -150,9 +163,7 @@ function Player(_x, _y, _pid, _socket)
 	};
 	
 	this.calculatePositionByHook = function(_x,_y){
-		//this.x = _hx;
-		//this.y = _hy;
-		if(distanceBetweenTwoPoints(_x,_y,this.x,this.y)<10){
+		if(distanceBetweenTwoPoints(_x,_y,this.x,this.y)<40){
 			this.beingHooked = false;
 		}
 		else{
@@ -173,7 +184,7 @@ function Player(_x, _y, _pid, _socket)
 			this.killHook = true;
 			this.isShoot = false;
 			this.beingHooked = false;
-			console.log("hook is killed because approached pillar");
+			//console.log("hook is killed because approached pillar");
 		}
 		else{
 			var vectorX = _hx - this.x;
@@ -213,12 +224,12 @@ function Player(_x, _y, _pid, _socket)
 				this.hookReturn =true;
 			}
 			else if(collideWithPillars(this.hx,this.hy)){
-				console.log("hook pillar");
+				//console.log("hook pillar");
 				this.hookPillar = true;
 				this.beingHooked = true;
 			}
 			else{			
-				console.log("hook throwing out");
+				//console.log("hook throwing out");
 				this.hx += 0.02602 * this.directionX * 500;
 				this.hy += 0.02602 * this.directionY * 500;
 			}
@@ -226,7 +237,7 @@ function Player(_x, _y, _pid, _socket)
 
 		}
 		else{			
-			console.log("hook returning");
+			//console.log("hook returning");
 			this.directionX = this.x-this.hx;
 			this.directionY = this.y-this.hy;
 			var magnitude = Math.sqrt(this.directionX*this.directionX+this.directionY*this.directionY);
@@ -236,7 +247,7 @@ function Player(_x, _y, _pid, _socket)
 			this.hy += 0.02602 * this.directionY * 500;
 			//kill hook
 			if(distanceBetweenTwoPoints(this.hx,this.hy,this.x,this.y)<20){
-				console.log("hook is killed because it returned");
+				//console.log("hook is killed because it returned");
 				this.hx = this.x;
 				this.hy = this.y;
 				this.hookReturn =false;
