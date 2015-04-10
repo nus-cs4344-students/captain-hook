@@ -16,8 +16,168 @@ function CHServer(sock) {
     var socket = sock;
     var sockets = {}; // Associative array for sockets, indexed via player ID
     var players = {}; // Associative array for players, indexed via socket ID
+	var team1Score = 0;
+	var team0Score = 0;
 
+	/*
+		scenario 1:
+			player A has pressed an arrow key and A is not being hooked.
+			1.server received movement packet from player A
+			2.server call A.calculatePosition(key)
+			3.since A.beingHooked is false, server update the current position of A.
+			4.server go into gameloop()
+			5.checking the interaction with other players
+			6.broadcast current states of all players to all players
+		scenario 2:
+			player A has pressed an array key and A is being hooked.
+			1.server received movement packet from player A
+			2.server call A.calculatePosition(key)
+			3.since A.beingHooked is true, server remains the XY coordinates of A.
+			4.server go into gameloop()
+			5.checking the interaction with other players
+			6.broadcast current states of all players to all players
+		scenario 3:
+			player A has just clicked LMB,and A hasnt thrown out any hook and A is not being hooked.
+			1.server received throwHook packet from player A
+			2.server check whether player A is being hooked
+			3.since A is not being hooked, server call setHookTarget(targetX,targetY)
+				3.1. since player A has never thrown out a hook, then set target coordinate, nid to be used when render the hook position in gameloop(), nid to be reset when the hook return to player A.
+				3.2. set isShoot to be true, to indicate player A is shooting
+			4.server go into gameloop()
+			5.checking the interaction with other players
+				5.1. since player A is shooting, server checks the interaction of this hook with all the other players
+				5.2. if there is a player B that it's XY coordinates is close to the XY coordinates of the hook belongs to player A, then result is player A hooked player B
+					5.2.1. if player A and player B is not in same team, player B will start deducting HP
+					5.2.2. set the hookReturn to be true for player A, which means the hook of player A is going to return to player A
+					5.2.3. set player B is being hooked, from now onwards, player B is not able to neither move or throw hook
+					5.2.4. bind player B movement to be same as player A hook position.
+				5.3. if player A and player B is close, set player B is not being hooked, from now onwards, player B can move and throw hook.
+				5.4. calculate new XY coordinates of hook of player A
+		scenario 4:
+			player A has just clicked LMB,and A hasnt thrown out and hook and A is being hooked.
+			1.server received throwHook packet from player A
+			2.server check whether player A is being hooked
+			3.since A is being hooked, server ignore the throwHook packet
+			4.server go into gameloop()
+			5.checking the interaction with other players
+				5.1. since player A is not shooting, just check the closeness of player A with other players
+			6.broadcast current states of all players to all players
+		scenario 5:
+			player A has just clicked LMB,and A has thrown out a hook and A is not being hooked.
+			1.server received throwHook packet from player A
+			2.server check whether player A is being hooked
+			3.since A is not being hooked, server call setHookTarget(targetX,targetY)
+				3.1. since A is shooting, so ignore set the XY coordinates
+			4.server go into gameloop()
+			5.checking the interaction with other players
+				SAME AS SCENARIO 3 STEP 5
+			6.broadcast current states of all players to all players
+		scenario 6:
+			player A has just clicked LMB,and A has thrown out a hook and A is being hooked.
+			SAME AS SCENARIO 5...
+		hook scenario 1:
+			hook of player A has just thrown, and it will not hook any other players (a miss throw)
+			1. when the hook of player A has not set to return to player A, when the distance between XY coordinates of A and XY coordinates of the hook is large than 500 pixels, it is set to be return to player A.
+		hook scenario 2:
+			hook of player A has just thrown, and it will
+			hook player B (a success throw)
+			SAME AS SCENARIO 3 STEP5
+	*/
     var gameLoop = function() {
+		//update game states for each player
+		var p1;
+		var p2;
+		//for(var i = 0;i<players.length;i++){
+		for(var i in players){
+			p1 = players[i];
+			if(p1.isShoot){
+				if(p1.hookPillar){
+					p1.calculatePositionByPillar(p1.hx,p1.hy);
+				}
+				else{
+					//for(var j=0;j<players.length;j++){
+					for(var j in players){
+						p2 = players[j];
+						if(p1.pid!=p2.pid){
+							if(distanceBetweenTwoPoints(p1.hx,p1.hy,p2.x,p2.y)<10){
+								if(p1.teamID!=p2.temID){
+									p2.hp--;//a bit different from real pudge war, being hooked will take damage.
+								}
+								p1.hookReturn = true;
+								p2.beingHooked = true;
+								p2.calculatePositionByHook(p1.x,p1.y);
+							}
+						}
+					}
+					p1.calculateHookPosition();
+				}
+			}
+		}
+		
+		//for(var i=0;i<players.length;i++){
+		for(var i in players){
+			p1 = players[i];
+			//for(var j=0;j<players.length;j++){
+			for(var j in players){
+				p2 = players[j];
+				if(distanceBetweenTwoPoints(p1.x,p1.y,p2.x,p2.y)<20){
+					if(p1.teamID!=p2.teamID){
+						p1.hp--;
+					}
+				}
+			}
+		}
+		
+		//respawn if any player's hp reach 0
+		for(var i in players){
+			var p = players[i];
+			p.respawn = false;
+			if(p.hp<1){
+				p.x = p.initialX;
+				p.y = p.initialY;
+				p.hp = 100;
+				p.respawn = true;
+				if(p.teamID==0){
+					team1Score++;
+				}
+				else{
+					team0Score++;
+				}
+			}
+		}
+		//console.log(players.length);
+		//for(var i=0;i<players.length;i++){
+		for(var i in players){
+			//console.log("broadcasting");
+			var p = players[i];
+			var playerTeamScore;
+			var opponentTeamScore;
+			if(p.teamID==1){
+				playerTeamScore=team1Score;
+				opponentTeamScore = team0Score;
+			}
+			else{
+				playerTeamScore=team0Score;
+				opponentTeamScore = team1Score;
+			}
+			broadcast({
+				type:"update", 
+				id: p.pid,
+				hp: p.hp,
+				x: p.x,
+				y: p.y,
+				hx:p.hx,
+				hy:p.hy,
+				beingHooked: p.beingHooked,
+				hookReturn: p.hookReturn,
+				killHook: p.killHook,
+				isShoot: p.isShoot,
+				respawn:p.respawn,
+				teamID: p.teamID,
+				playerTeamScore:playerTeamScore,
+				opponentTeamScore:opponentTeamScore
+			})
+		}
     };
 
     this.start = function() {
@@ -81,54 +241,12 @@ function CHServer(sock) {
                             }
                         }
                         break;
-
-                    case "hook":
-                        // A player has asked to hook.  Create
-                        // tell everyone (excluding the player)
-                        var pid = players[conn.id].pid;
-                        broadcastUnless({
-                            type:"hook",
-                            id: pid,
-                            x: message.x,
-                            y: message.y
-                        }, pid);
-                        break;
-
-                    case "update":
-                        var pid = message.id;
-                        // and tell everyone.
-                        for (var i in sockets) {
-                            if (i != pid) {
-                                if (sockets[i] !== undefined) {
-                                    unicast(sockets[i], {
-                                        type:"update",
-                                        id: message.id,
-                                        x: message.x,
-                                        y: message.y
-                                    });
-                                }
-                            }
-                        }
-                        break;
-					
-					case "update-hooked-player":
-						var pid = message.id;
-						var hid = message.hid;
-						for (var i in sockets) {
-                            if (i != pid) {
-                                if (sockets[i] !== undefined) {
-                                    unicast(sockets[i], {
-                                        type:"update",
-                                        id: hid,
-                                        x: message.x,
-                                        y: message.y
-                                    });
-                                }
-                            }
-                        }
-						
+					case "playerAction":
+						players[conn.id].calculatePositionByDirection(message.direction);
+						if((!players[conn.id].beingHooked)&&(message.isThrowHook)){
+							players[conn.id].setHookTarget(message.mouse_x,message.mouse_y);
+						}
 						break;
-
                     default:
                         console.log("Unhandled " + message.type);
                 }
@@ -204,6 +322,14 @@ function CHServer(sock) {
     var unicast = function (socket, msg) {
         socket.write(JSON.stringify(msg));
     }
+}
+
+function distanceBetweenTwoPoints(x1,y1,x2,y2){
+	var diffX = x1-x2;
+	var diffY = y1-y2;
+	
+	var distance = Math.sqrt(diffX*diffX+diffY*diffY);
+	return distance;
 }
 
 global.CHServer = CHServer;

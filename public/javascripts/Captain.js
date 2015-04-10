@@ -1,36 +1,14 @@
 function Captain(game,xPos,yPos,sid){
-	
-	/*
-    this.hook = game.add.group();
-    this.hook.enableBody = true;
-    this.hook.physicsBodyType = Phaser.Physics.ARCADE;
-    this.hook.createMultiple(50, 'star');
-    this.hook.setAll('checkWorldBounds', true);	
-	*/
-	
 	this.hook;
 	
+	// Initialize Captain's Sprite
 	this.sprite = game.add.sprite(xPos,yPos,'dude')
 	this.sprite.anchor.set(0.5);
 	game.physics.enable(this.sprite, Phaser.Physics.ARCADE);
 	this.sprite.body.allowRotation = false;
 	this.sprite.body.collideWorldBounds = true;
 	
-	//Public variables
-	this.initialX;
-	this.initialY;
-	this.isMoving = false;
-	this.xVelocity;
-	this.yVelocity;
-	this.health;
-	this.hookID;
-	this.teamID;
-	this.playerID;
-	this.leftOrRight;
-	this.hookedPlayer;
-	this.hookReturn;
-	this.isShooting = false;
-	this.beingHooked = false;
+
 	//Constructor
 	this.initialX = xPos;
 	this.initialY = yPos;
@@ -44,24 +22,18 @@ function Captain(game,xPos,yPos,sid){
 	this.hookedPlayer = -1;
 	this.xVelocity = this.sprite.body.velocity.x;
 	this.yVelocity = this.sprite.body.velocity.y;
-	this.hookReturn =false;
+	this.hookReturn = false;
+	this.killHook = false;
+	this.isHookCreated = false;
+	this.isShooting = false;
+	this.beingHooked = false;
+	this.respawn = false;
 	
-	/*
 	this.hud = Phaser.Plugin.HUDManager.create(game, this, 'captainHUD');
   	this.healthHUD = this.hud.addBar(0,-20, 32, 2, 100, 'hp', this, Phaser.Plugin.HUDManager.HEALTHBAR, false);
   	this.healthHUD.bar.anchor.setTo(0.5, 0.5);
   	this.sprite.addChild(this.healthHUD.bar);
-	*/
 	
-	this.init = function(xPos, yPos, sid) {
-		this.initialX = xPos;
-		this.initialY = yPos;
-		this.hookID = sid;
-		this.playerID = sid;
-		this.teamID = sid%2;
-		this.leftOrRight = sid;
-	};
-
 	this.isDead = function(){
 		if(this.hp<=0){
 			return true;
@@ -95,24 +67,39 @@ function Captain(game,xPos,yPos,sid){
 	this.killHook = function(){
 		this.hook.kill();
 		this.isShooting = false;
+		this.killHook =false;
 	}
 }
 
-// Public method: takeDmg()
-// remark: if two characters are getting nearer, automatically deduct their own HP
-Captain.prototype.takeDmg = function(counter){
-	this.hp = this.hp-1*counter;
-	//console.log("number of nearer opponents: "+counter);
-}
 
-// Public method: respawn()
-Captain.prototype.respawn = function(){
-	//console.log("character respawned");
-	this.x = this.initialX;
-	this.y = this.initialY;
-	this.sprite.body.x = this.initialX;
-	this.sprite.body.y = this.initialY;
-	this.xVelocity = 0;
-	this.yVelocity = 0;
-	this.hp = 100;
+Captain.prototype.update = function(x, y, hp, hook_x, hook_y,beingHooked,hookReturn,killHook,isShoot,respawn) {
+	this.sprite.x = x;
+	this.sprite.y = y;
+	this.hp = hp;
+	this.isShooting = isShoot;
+	this.killHook = killHook;
+	this.hookReturn = hookReturn;
+	this.beingHooked = beingHooked;
+	this.respawn = respawn;
+	// if there is hook position, check if hook exist alr, if not create hook
+	if (isShoot) {
+		// Check if hook already exist
+		if (this.isHookCreated) {
+			this.hook.x = hook_x;
+			this.hook.y = hook_y;
+		} else {
+			this.isHookCreated = true;
+			this.createHook(hook_x, hook_y);
+		}
+	}
+	if ((killHook)&&(this.isHookCreated)){
+		this.hook.kill();
+		this.isHookCreated = false;
+	}
+	if (respawn){
+		this.sprite.x = this.initialX;
+		this.sprite.y = this.initialY;
+		this.hp = 100;
+		this.respawn = false;
+	}
 }

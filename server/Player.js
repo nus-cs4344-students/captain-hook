@@ -1,11 +1,24 @@
-"use strict";
 
 function Player(_x, _y, _pid, _socket)
 {
     this.x = _x;
     this.y = _y;
+	this.initialX = _x;
+	this.initialY = _y;
 	this.vx = 0;
 	this.vy = 0;
+	this.hx;
+	this.hy;
+	this.beingHooked = false;
+	this.hookReturn = false;
+	this.killHook = false;
+	this.isShoot = false;
+	this.hookPillar = false;
+	this.readyFlag = true;
+	this.targetX;
+	this.targetY;
+	this.directionX;
+	this.directionY;
 	this.hp = 100;
     this.name = _pid;
     this.pid = _pid;
@@ -87,7 +100,193 @@ function Player(_x, _y, _pid, _socket)
             console.log("[!] " + this.name + " left room " + this.room.name);
             this.room = null;
         }
-    }
+    };
+	//--------template for shiyu client reply-------------------------
+	/*
+		when player press any arrow key, client sends movement packet to server. server checks whether this client is being hooked, if not run calculatePositionByDirection(); if yes run calculatePositionByHook().
+	*/
+	this.calculatePositionByDirection = function(direction){
+		var tempX = this.x;
+		var tempY = this.y;
+		if(!this.beingHooked){
+			//if(!collideWithPillars(this.x,this.y)){
+				if(direction=="left"){
+					this.x+=(-100)*0.02602;
+				}
+				else if(direction=="right"){
+					this.x+=(100)*0.02602;
+				}
+				else if(direction=="up"){
+					this.y+=(-100)*0.02602;
+				}
+				else if(direction=="down"){
+					this.y+=(100)*0.02602;
+				}
+			//}
+		}
+		//check collision with river
+		if(collideWithRiver(this.x,this.y)){
+			this.x = tempX;
+			this.y = tempY;
+		}
+		//check collision with pillar
+		if(collideWithPillars(this.x,this.y)){
+			this.x = tempX;
+			this.y = tempY;
+		}
+		//check collision with world boundary
+		if(this.x<20){
+			this.x = 20;
+		}
+		if(this.y<30){
+			this.y = 30;
+		}	
+		if(this.x>780){
+			this.x = 780;
+		}
+		if(this.y>570){
+			this.y = 570;
+		}
+	};
+	
+	this.calculatePositionByHook = function(_x,_y){
+		//this.x = _hx;
+		//this.y = _hy;
+		if(distanceBetweenTwoPoints(_x,_y,this.x,this.y)<10){
+			this.beingHooked = false;
+		}
+		else{
+			var vectorX = _x - this.x;
+			var vectorY = _y - this.y;
+			var magnitude = Math.sqrt(vectorX*vectorX+vectorY*vectorY);
+			vectorX = vectorX/magnitude;
+			vectorY = vectorY/magnitude;
+			this.x += 0.02602 * vectorX * 500;
+			this.y += 0.02602 * vectorY * 500;
+		}
+	};
+	
+	this.calculatePositionByPillar = function(_hx,_hy){
+		if(distanceBetweenTwoPoints(_hx,_hy,this.x,this.y)<20){
+			this.hookPillar = false;
+			this.hookReturn =false;
+			this.killHook = true;
+			this.isShoot = false;
+			this.beingHooked = false;
+			console.log("hook is killed because approached pillar");
+		}
+		else{
+			var vectorX = _hx - this.x;
+			var vectorY = _hy - this.y;
+			var magnitude = Math.sqrt(vectorX*vectorX+vectorY*vectorY);
+			vectorX = vectorX/magnitude;
+			vectorY = vectorY/magnitude;
+			this.x += 0.02602 * vectorX * 500;
+			this.y += 0.02602 * vectorY * 500;
+		}
+
+	};
+	
+	/*
+		when player click LMB to throw out hook, client sends throwhook packet to server with the target coordinate.*client will keep sending throwhook packet until it returned to the player.* server call calculateHookPosition() to simulate the hook.
+	*/
+	this.setHookTarget = function(_px,_py){
+		if(!this.isShoot){
+			this.targetX = _px;
+			this.targetY = _py;
+			this.hx = this.x;
+			this.hy = this.y;
+			this.isShoot = true;
+			this.directionX = this.targetX-this.hx;
+			this.directionY = this.targetY-this.hy;	
+			var magnitude = Math.sqrt(this.directionX*this.directionX+this.directionY*this.directionY);
+			this.directionX = this.directionX/magnitude;
+			this.directionY = this.directionY/magnitude;
+
+		}
+	};
+	this.calculateHookPosition = function (){
+		this.killHook = false;
+
+		if(!this.hookReturn){
+			if(distanceBetweenTwoPoints(this.hx,this.hy,this.x,this.y)>500){
+				this.hookReturn =true;
+			}
+			else if(collideWithPillars(this.hx,this.hy)){
+				console.log("hook pillar");
+				this.hookPillar = true;
+				this.beingHooked = true;
+			}
+			else{			
+				console.log("hook throwing out");
+				this.hx += 0.02602 * this.directionX * 500;
+				this.hy += 0.02602 * this.directionY * 500;
+			}
+			//return hook
+
+		}
+		else{			
+			console.log("hook returning");
+			this.directionX = this.x-this.hx;
+			this.directionY = this.y-this.hy;
+			var magnitude = Math.sqrt(this.directionX*this.directionX+this.directionY*this.directionY);
+			this.directionX = this.directionX/magnitude;
+			this.directionY = this.directionY/magnitude;
+			this.hx += 0.02602 * this.directionX * 500;
+			this.hy += 0.02602 * this.directionY * 500;
+			//kill hook
+			if(distanceBetweenTwoPoints(this.hx,this.hy,this.x,this.y)<20){
+				console.log("hook is killed because it returned");
+				this.hx = this.x;
+				this.hy = this.y;
+				this.hookReturn =false;
+				this.killHook = true;
+				this.isShoot = false;
+			}
+		}
+	};
+	
+
+
+//--------------------------------------------
 }
 
+function collideWithPillars(_x,_y){
+	if(distanceBetweenTwoPoints(_x,_y,650,100)<10){
+		return true;
+	}
+	else if(distanceBetweenTwoPoints(_x,_y,650,500)<10){
+		return true;
+	}
+	else if(distanceBetweenTwoPoints(_x,_y,150,100)<10){
+		return true;
+	}
+	else if(distanceBetweenTwoPoints(_x,_y,150,500)<10){
+		return true;
+	}
+	else{
+		return false;
+	}
+}
+
+function collideWithRiver(_x,_y){
+	if(distanceBetweenTwoPoints(_x,_y,270,_y)<10){
+		return true;
+	}
+	else if(distanceBetweenTwoPoints(_x,_y,540,_y)<10){
+		return true;
+	}
+	else{
+		return false;
+	}
+}
+
+function distanceBetweenTwoPoints(x1,y1,x2,y2){
+	var diffX = x1-x2;
+	var diffY = y1-y2;
+	
+	var distance = Math.sqrt(diffX*diffX+diffY*diffY);
+	//console.log(distance);
+	return distance;
+}
 global.Player = Player;
