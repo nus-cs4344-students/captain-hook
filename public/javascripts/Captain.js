@@ -8,6 +8,7 @@ function Captain(game,xPos,yPos,sid){
 	this.sprite.body.allowRotation = false;
 	this.sprite.body.collideWorldBounds = true;
 	
+	game.world.bringToTop(this.sprite);
 
 	//Constructor
 	this.initialX = xPos;
