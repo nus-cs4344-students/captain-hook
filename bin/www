@@ -12,6 +12,9 @@ var http = require('http');
 var sockjs = require("sockjs");
 require('../server/CHServer');
 
+// for room server
+require('../server/RoomServer');
+
 /**
  * Get port from environment and store in Express.
  */

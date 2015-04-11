@@ -1,9 +1,6 @@
 'use strict';
 
 var SERVERPATH = "./";
-var GAMEPATH = "../public/javascripts/";
-
-var net = require('net');
 require(SERVERPATH + "Player.js");
 require(SERVERPATH + "Utilities.js");
 require(SERVERPATH + "Config.js");
@@ -124,17 +121,13 @@ function CHServer(sock) {
 				teamID: p.teamID,
 				playerTeamScore:playerTeamScore,
 				opponentTeamScore:opponentTeamScore,
-				playerDelay:p.delay,
 				timestamp:currentTime
 			};
 			for(var j in players){
 				var delay = players[j].getDelay();
 				var pid = players[j].pid;
 				//console.log("player("+pid+")'s delay: "+delay);
-				//setTimeout(function(){
-					//console.log("packet sent to player:"+pid+" after: "+delay+" ms");
-					unicast(sockets[pid],states);
-				//},delay);
+				setTimeout(unicast(sockets[pid],states),delay);
 			}
 		}
     };

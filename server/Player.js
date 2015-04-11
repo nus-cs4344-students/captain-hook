@@ -38,7 +38,7 @@ function Player(_x, _y, _pid, _socket)
         } else {
             return 0;
         }
-    }
+    };
 	
     this.Ready = function()
     {

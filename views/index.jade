@@ -1,16 +1,58 @@
-extends layout
+doctype html
+html
+  head
+    title= title
+    link(rel='stylesheet', href='/stylesheets/style.css')
 
-block content
-  h1(style='text-align:center;').
-    #{title}
-  p(style='text-align:center;').
-    Welcome to #{title}
+    meta(charset="utf-8")
+    meta(http-equiv="X-UA-Compatible", content="IE=edge,chrome=1")
+    meta(name="viewport", content="width=device-width, initial-scale=1.0, maximum-scale=1.0")
 
-  div(id='captain-hook' style='width:800px; margin:0 auto;')
+    title(Captain Hook)
 
-  script(type='text/javascript' src='javascripts/Config.js')
-  script(type='text/javascript' src='javascripts/Captain.js')
-  script(type='text/javascript' src='javascripts/phaser.min.js')
-  script(type='text/javascript' src='javascripts/HudManager.js')
+    link(rel="stylesheet", type="text/css", href="/dist/semantic.css")
+    link(rel="stylesheet", type="text/css", href="/stylesheets/captainhook.css")
+    script(type='text/javascript', src="http://cdnjs.cloudflare.com/ajax/libs/jquery/2.0.3/jquery.js")
+    script(type='text/javascript', src="http://cdnjs.cloudflare.com/ajax/libs/jquery.address/1.6/jquery.address.min.js")
+    script(type='text/javascript', src="/dist/semantic.js")
 
-  include ./foot.jade
+  body
+    block content
+      div(class='cpt hook')
+        div(class="ui two column centered grid")
+          div(id="message", class="column ui segment", style="min-height: 8rem;")
+            div(class="ui top attached label")
+              h1(class="ui header").
+                Welcome to Captain Hook!
+
+
+          div(class="six column centered row")
+            div(id = "playersonline", class="column")
+              h3(class="ui dividing header").
+                Players Currently Online:
+              i(class="user icon").
+                Player 1
+              i(class="user icon").
+                Player 2
+              i(class="user icon").
+                Player 3
+              i(class="user icon").
+                Player 4
+
+      div(id="groupchat", class="column")
+        div(class="column ui segment", style="min-height: 35rem;")
+          div(class="ui top attached label")
+            h3(class="ui header").
+              Group Chat!
+
+        form(class="ui form")
+          div(class="required field")
+            label('Message:')
+            div(class="ui icon input")
+              input(type="text", placeholder="Type Message Here:")
+              i(class="mail outline icon")
+            div(class="ui submit button").
+              Submit
+
+
+include ./foot.jade

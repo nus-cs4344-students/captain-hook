@@ -1,4 +1,8 @@
-var roomScript = require(SERVERPATH + "RoomLogic.js");
+var SERVERPATH = './';
+var roomScript = require(SERVERPATH + 'RoomLogic.js');
+var net = require('net');
+require(SERVERPATH + 'Config.js');
+require(SERVERPATH + 'Player.js');
 
 /**
  Script: Node.JS Game Server - Room Server
@@ -182,6 +186,6 @@ net.createServer(function(socket) {
         socket.end();
     });
 
-}).listen(5000);
+}).listen(Config.ROOMSERVER_PORT);
 
-console.log("Server is running at port " + 5000);
+console.log("Room Server is running at port " + Config.ROOMSERVER_PORT);
