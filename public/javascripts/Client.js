@@ -111,7 +111,8 @@ function Client() {
      *
      */
     this.run = function() {
-        sock = new SockJS('http://' + Config.SERVER_NAME + ':' + Config.PORT + '/captain');
+        console.log(location.host);
+        sock = new SockJS('http://' + Config.SERVER_NAME + '/captain');
 
         var count= [];
         sock.onmessage = function(e) {
