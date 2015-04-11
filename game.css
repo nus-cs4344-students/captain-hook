@@ -1,0 +1,30 @@
+/*******************************
+            Global
+*******************************/
+
+div#playersonline {
+    color: blue;
+    background-color:lightblue;
+    min-height: 650px;
+    max-height: 700px;
+    max-width: 190px;
+    overflow:auto;
+}
+
+div#gamecanvas {
+    color: red;
+    background-color:lightgray;
+    min-height: 650px;
+    max-height: 700px;
+    min-width: 800px;
+    overflow:auto;
+}
+
+div#groupchat {
+    color: black;
+    background-color:lightgreen;
+    min-height: 650px;
+    max-height: 700px;
+    min-width: 200px;
+    overflow:auto;
+}

@@ -1,0 +1,30 @@
+/*******************************
+            Global
+*******************************/
+
+div#playersonline {
+    color: blue;
+    background-color:lightblue;
+    min-height: 650px;
+    max-height: 700px;
+    max-width: 190px;
+    overflow:auto;
+}
+
+div#groupchat {
+    color: black;
+    background-color:lightgreen;
+    min-height: 650px;
+    max-height: 700px;
+    min-width: 575px;
+    overflow:auto;
+}
+
+div#roomdetails {
+    color: red;
+    background-color:lightgray;
+    min-height: 650px;
+    max-height: 700px;
+    max-width: 210px;
+    overflow:auto;
+}
