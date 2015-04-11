@@ -43,6 +43,7 @@ function Captain(game,xPos,yPos,sid){
 	this.beingHooked = false;
 	this.respawn = false;
 	this.lastUpdate = 0;
+	this.delay = 0;
 	
 	this.hud = Phaser.Plugin.HUDManager.create(game, this, 'captainHUD');
   	this.healthHUD = this.hud.addBar(0,-20, 32, 2, 100, 'hp', this, Phaser.Plugin.HUDManager.HEALTHBAR, false);
@@ -87,7 +88,7 @@ function Captain(game,xPos,yPos,sid){
 }
 
 
-Captain.prototype.update = function(x, y, hp, hook_x, hook_y,beingHooked,hookReturn,killHook,isShoot,respawn,timestamp) {
+Captain.prototype.update = function(x, y, hp, hook_x, hook_y,beingHooked,hookReturn,killHook,isShoot,respawn,timestamp,playerDelay) {
 	this.sprite.x = x;
 	this.sprite.y = y;
 	this.hp = hp;
@@ -97,6 +98,7 @@ Captain.prototype.update = function(x, y, hp, hook_x, hook_y,beingHooked,hookRet
 	this.beingHooked = beingHooked;
 	this.respawn = respawn;
 	this.lastUpdate = timestamp;
+	this.delay = playerDelay;
 	// if there is hook position, check if hook exist alr, if not create hook
 	if (isShoot) {
 		// Check if hook already exist

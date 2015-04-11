@@ -1,7 +1,7 @@
 
 function Client() {
     var sock;           // socket to server
-    var captains = [];  // Array of captains currently in game
+    var captains = {};  // Array of captains currently in game
     var hooks = [];     // Array of hooks
     var myCaptain;
     var myHook;
@@ -14,6 +14,7 @@ function Client() {
 	var myTeamScore = 0;
 	var opponentTeamScore = 0;
 	var delay=0;
+	var maxDelay =0;
     //var that = this;
 
     var game = new Phaser.Game(800, 608, Phaser.CANVAS, 'captain-hook', { preload: preload, create: create, update: update, render: render });
@@ -147,6 +148,7 @@ function Client() {
                     console.log('Update position for ' + message.id);
 					var t = message.timestamp;
 					if(t<captains[message.id].lastUpdate){
+						console.log("drop old packet");
 						break;
 					}
                     playerId = message.id;
@@ -161,7 +163,15 @@ function Client() {
 					killHook = message.killHook;
 					respawn = message.respawn;
 					timestamp = message.timestamp;
-                    captains[playerId].update(playerNewPos_x, playerNewPos_y, playerHp, hookNewPos_x, hookNewPos_y,beingHooked,hookReturn,killHook,isShoot,respawn,timestamp);
+					playerDelay = message.playerDelay;
+					for(var i in captains){
+						if(captains[i].delay>maxDelay){
+							maxDelay = captains[i].delay;
+						}
+					}
+					//setTimeout(function(){
+						captains[playerId].update(playerNewPos_x, playerNewPos_y, playerHp, hookNewPos_x, hookNewPos_y,beingHooked,hookReturn,killHook,isShoot,respawn,timestamp,playerDelay);
+					//},delay);
 					if(myCaptain.playerID==message.id){
 						myTeamScore = message.playerTeamScore;
 						opponentTeamScore = message.opponentTeamScore;
@@ -214,12 +224,14 @@ function Client() {
         } 
 		
         if (isKeyDown || isThrowHook) {
-            sendToServer({type:"playerAction",
-                            id: myCaptain.playerID,
-                            direction: cursorDirection,
-                            isThrowHook: isThrowHook,
-                            mouse_x: game.input.x,
-                            mouse_y: game.input.y});
+			setTimeout(function(){
+				sendToServer({type:"playerAction",
+								id: myCaptain.playerID,
+								direction: cursorDirection,
+								isThrowHook: isThrowHook,
+								mouse_x: game.input.x,
+								mouse_y: game.input.y});
+			},delay);
         }    
 		
 		if (wKey.isDown){
@@ -258,7 +270,7 @@ function Client() {
 		game.debug.text(" my team score: "+ myTeamScore+" opponent team score: "+opponentTeamScore,32,54);
         //game.debug.text(" x:" + myCaptain.sprite.body.x + "   y:" + myCaptain.sprite.body.y + " player ID:" + myCaptain.playerID + " total other players:" + captains.length+ " HP:" + myCaptain.hp+" team ID: "+myCaptain.teamID, 32, 32);
 		//game.debug.text(" isShoot: "+ myCaptain.isShooting + " killHook: " + myCaptain.killHook + " hookReturn: "+myCaptain.hookReturn + " beingHooked: "+myCaptain.beingHooked + " respawn: "+myCaptain.respawn,32,54);
-		game.debug.text("last time update for my character: "+myCaptain.lastUpdate+ " delay: "+delay+" ms",32,76);
+		game.debug.text("last time update for my character: "+myCaptain.lastUpdate+ " delay: "+delay+" ms local delay: "+Math.abs(maxDelay-delay),32,76);
         //game.debug.spriteInfo(sprite, 32, 450);
     }
 }
