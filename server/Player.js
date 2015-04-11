@@ -151,14 +151,14 @@ function Player(_x, _y, _pid, _socket)
 		if(this.x<20){
 			this.x = 20;
 		}
-		if(this.y<30){
-			this.y = 30;
+		if(this.y<15){
+			this.y = 15;
 		}	
 		if(this.x>780){
 			this.x = 780;
 		}
-		if(this.y>570){
-			this.y = 570;
+		if(this.y>585){
+			this.y = 585;
 		}
 	};
 	
@@ -178,7 +178,7 @@ function Player(_x, _y, _pid, _socket)
 	};
 	
 	this.calculatePositionByPillar = function(_hx,_hy){
-		if(distanceBetweenTwoPoints(_hx,_hy,this.x,this.y)<20){
+		if(distanceBetweenTwoPoints(_hx,_hy,this.x,this.y)<30){
 			this.hookPillar = false;
 			this.hookReturn =false;
 			this.killHook = true;
@@ -263,16 +263,16 @@ function Player(_x, _y, _pid, _socket)
 }
 
 function collideWithPillars(_x,_y){
-	if(distanceBetweenTwoPoints(_x,_y,650,100)<10){
+	if(distanceBetweenTwoPoints(_x,_y,660,125)<15){
 		return true;
 	}
-	else if(distanceBetweenTwoPoints(_x,_y,650,500)<10){
+	else if(distanceBetweenTwoPoints(_x,_y,660,500)<15){
 		return true;
 	}
-	else if(distanceBetweenTwoPoints(_x,_y,150,100)<10){
+	else if(distanceBetweenTwoPoints(_x,_y,150,110)<15){
 		return true;
 	}
-	else if(distanceBetweenTwoPoints(_x,_y,150,500)<10){
+	else if(distanceBetweenTwoPoints(_x,_y,150,500)<15){
 		return true;
 	}
 	else{
@@ -281,7 +281,7 @@ function collideWithPillars(_x,_y){
 }
 
 function collideWithRiver(_x,_y){
-	if(distanceBetweenTwoPoints(_x,_y,270,_y)<10){
+	if(distanceBetweenTwoPoints(_x,_y,260,_y)<10){
 		return true;
 	}
 	else if(distanceBetweenTwoPoints(_x,_y,540,_y)<10){
