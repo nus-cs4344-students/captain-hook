@@ -26,7 +26,7 @@ Phaser.Plugin.HUDManager.HEALTHBAR = function(percent) {
   if (percent <= 0.75) {
     return '#eaff74'; //yellow
   }
-  return '#74ff74'; //green
+  return '#339933'; //green
 };
 
 

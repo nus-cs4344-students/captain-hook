@@ -19,7 +19,8 @@ function Client() {
     var game = new Phaser.Game(800, 608, Phaser.CANVAS, 'captain-hook', { preload: preload, create: create, update: update, render: render });
 
     function preload() {
-        game.load.spritesheet('dude', '../assets/dude.png', 32, 48);
+        game.load.spritesheet('captain1', '../assets/captain1SpriteSheet.png', 32, 32);
+        game.load.spritesheet('captain2', '../assets/captain2SpriteSheet.png', 32, 32);
         game.load.image('star', '../assets/star.png');
         game.load.image('ground', '../assets/platform_vertical.png');
         game.load.tilemap('battlefield', '../assets/map.json', null, Phaser.Tilemap.TILED_JSON);
@@ -197,13 +198,18 @@ function Client() {
         var cursorDirection = "";
         if (cursors.left.isDown) {
             cursorDirection = "left";
+            myCaptain.sprite.animations.play('left');
         } else if (cursors.right.isDown) {
-            cursorDirection = "right";    
+            cursorDirection = "right";
+            myCaptain.sprite.animations.play('right');
         } else if (cursors.up.isDown) {
             cursorDirection = "up";
+            myCaptain.sprite.animations.play('up');
         } else if (cursors.down.isDown) {
             cursorDirection = "down";
+            myCaptain.sprite.animations.play('down');
         } else {
+            myCaptain.sprite.animations.stop();
             isKeyDown = false;
         } 
 		

@@ -2,12 +2,25 @@ function Captain(game,xPos,yPos,sid){
 	this.hook;
 	
 	// Initialize Captain's Sprite
-	this.sprite = game.add.sprite(xPos,yPos,'dude')
+	this.sprite;
+	if (sid%2 == 0) {
+		this.sprite = game.add.sprite(xPos,yPos,'captain1');
+	} else {
+		this.sprite = game.add.sprite(xPos,yPos,'captain2');
+	}	
 	this.sprite.anchor.set(0.5);
 	game.physics.enable(this.sprite, Phaser.Physics.ARCADE);
 	this.sprite.body.allowRotation = false;
 	this.sprite.body.collideWorldBounds = true;
-	
+
+	this.sprite.animations.add('up', [36, 37, 38], 10, true);
+	this.sprite.animations.add('down', [0, 1, 2], 10, true);
+
+	this.sprite.animations.add('left', [12, 13, 14], 10, true);
+	this.sprite.animations.add('right', [24, 25, 26], 10, true);
+
+	//this.sprite.frame = 13;
+
 	game.world.bringToTop(this.sprite);
 
 	//Constructor
