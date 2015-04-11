@@ -1,7 +1,7 @@
 
 function Client() {
     var sock;           // socket to server
-    var captains = {};  // Array of captains currently in game
+    var captains = [];  // Array of captains currently in game
     var hooks = [];     // Array of hooks
     var myCaptain;
     var myHook;
@@ -14,7 +14,6 @@ function Client() {
 	var myTeamScore = 0;
 	var opponentTeamScore = 0;
 	var delay=0;
-	var maxDelay =0;
     //var that = this;
 
     var game = new Phaser.Game(800, 608, Phaser.CANVAS, 'captain-hook', { preload: preload, create: create, update: update, render: render });
@@ -114,6 +113,7 @@ function Client() {
     this.run = function() {
         sock = new SockJS('http://' + Config.SERVER_NAME + ':' + Config.PORT + '/captain');
 
+        var count= [];
         sock.onmessage = function(e) {
             var message = JSON.parse(e.data);
             console.log('Client received : ' + e.data);
@@ -148,7 +148,6 @@ function Client() {
                     console.log('Update position for ' + message.id);
 					var t = message.timestamp;
 					if(t<captains[message.id].lastUpdate){
-						console.log("drop old packet");
 						break;
 					}
                     playerId = message.id;
@@ -163,16 +162,32 @@ function Client() {
 					killHook = message.killHook;
 					respawn = message.respawn;
 					timestamp = message.timestamp;
-					playerDelay = message.playerDelay;
-					for(var i in captains){
-						if(captains[i].delay>maxDelay){
-							maxDelay = captains[i].delay;
-						}
-					}
-					//setTimeout(function(){
-						captains[playerId].update(playerNewPos_x, playerNewPos_y, playerHp, hookNewPos_x, hookNewPos_y,beingHooked,hookReturn,killHook,isShoot,respawn,timestamp,playerDelay);
-					//},delay);
-					if(myCaptain.playerID==message.id){
+                    var direction = checkDirection(captains[playerId].sprite.x, captains[playerId].sprite.y, playerNewPos_x, playerNewPos_y);
+                    switch (direction) {
+                        case "up" :
+                            captains[playerId].sprite.animations.play('up');
+                            break;
+                        case "down" :
+                            captains[playerId].sprite.animations.play('down');
+                            break;
+                        case "left" :
+                            captains[playerId].sprite.animations.play('left');
+                            break;
+                        case "right" :
+                            captains[playerId].sprite.animations.play('right');
+                            break;
+                        case "noChange" :
+                            count[playerId]++;
+                            //if (count[playerId] > 100) {
+                                captains[playerId].sprite.animations.stop();
+                                //count[playerId] = 0;
+                            //}
+                            break;
+                    }
+                    captains[playerId].update(playerNewPos_x, playerNewPos_y, playerHp, hookNewPos_x, hookNewPos_y,beingHooked,hookReturn,killHook,isShoot,respawn,timestamp);
+					
+
+                    if(myCaptain.playerID==message.id){
 						myTeamScore = message.playerTeamScore;
 						opponentTeamScore = message.opponentTeamScore;
 					}
@@ -224,14 +239,12 @@ function Client() {
         } 
 		
         if (isKeyDown || isThrowHook) {
-			setTimeout(function(){
-				sendToServer({type:"playerAction",
-								id: myCaptain.playerID,
-								direction: cursorDirection,
-								isThrowHook: isThrowHook,
-								mouse_x: game.input.x,
-								mouse_y: game.input.y});
-			},delay);
+            sendToServer({type:"playerAction",
+                            id: myCaptain.playerID,
+                            direction: cursorDirection,
+                            isThrowHook: isThrowHook,
+                            mouse_x: game.input.x,
+                            mouse_y: game.input.y});
         }    
 		
 		if (wKey.isDown){
@@ -270,8 +283,22 @@ function Client() {
 		game.debug.text(" my team score: "+ myTeamScore+" opponent team score: "+opponentTeamScore,32,54);
         //game.debug.text(" x:" + myCaptain.sprite.body.x + "   y:" + myCaptain.sprite.body.y + " player ID:" + myCaptain.playerID + " total other players:" + captains.length+ " HP:" + myCaptain.hp+" team ID: "+myCaptain.teamID, 32, 32);
 		//game.debug.text(" isShoot: "+ myCaptain.isShooting + " killHook: " + myCaptain.killHook + " hookReturn: "+myCaptain.hookReturn + " beingHooked: "+myCaptain.beingHooked + " respawn: "+myCaptain.respawn,32,54);
-		game.debug.text("last time update for my character: "+myCaptain.lastUpdate+ " delay: "+delay+" ms local delay: "+Math.abs(maxDelay-delay),32,76);
+		game.debug.text("last time update for my character: "+myCaptain.lastUpdate+ " delay: "+delay+" ms",32,76);
         //game.debug.spriteInfo(sprite, 32, 450);
+    }
+
+    function checkDirection(prev_x, prev_y, new_x, new_y) {
+        if ((new_x - prev_x) > 0) {
+            return "right";
+        } else if ((new_x - prev_x) < 0) {
+            return "left";
+        } else if ((new_y - prev_y) > 0) {
+            return "down";
+        } else if ((new_y - prev_y) < 0) {
+            return "up";
+        } else {
+            return "noChange";
+        }
     }
 }
 
