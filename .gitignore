@@ -55,3 +55,6 @@ components
 # Production config  #
 ######################
 config/production.json
+
+.idea
+*.iml
