@@ -37,7 +37,8 @@ function CHServer(sock) {
 						if(p1.pid!=p2.pid){
 							//if(!p2.beingHooked){
 								if(distanceBetweenTwoPoints(p1.hx,p1.hy,p2.x,p2.y)<10){
-									if(p1.teamID!=p2.temID){
+									if(p1.teamID!=p2.teamID){
+										//console.log("player "+p1.pid+"(teamID:"+p1.teamID+") hooked player "+p2.pid+"(teamID:"+p2.teamID+")");
 										p2.hp--;//a bit different from real pudge war, being hooked will take damage.
 									}
 									p1.hookReturn = true;
@@ -75,6 +76,11 @@ function CHServer(sock) {
 				p.y = p.initialY;
 				p.hp = 100;
 				p.respawn = true;
+				p.beingHooked = false;
+				p.hookReturn = false;
+				p.killHook = false;
+				p.isShoot = false;
+				p.hookPillar = false;
 				if(p.teamID==0){
 					team1Score++;
 				}
@@ -127,25 +133,6 @@ function CHServer(sock) {
 				console.log("player("+pid+")'s delay: "+delay);
 				setTimeout(unicast(sockets[pid],states),delay);
 			}
-			/*
-			broadcast({
-				type:"update", 
-				id: p.pid,
-				hp: p.hp,
-				x: p.x,
-				y: p.y,
-				hx:p.hx,
-				hy:p.hy,
-				beingHooked: p.beingHooked,
-				hookReturn: p.hookReturn,
-				killHook: p.killHook,
-				isShoot: p.isShoot,
-				respawn:p.respawn,
-				teamID: p.teamID,
-				playerTeamScore:playerTeamScore,
-				opponentTeamScore:opponentTeamScore,
-				timestamp:currentTime
-			})*/
 		}
     };
 

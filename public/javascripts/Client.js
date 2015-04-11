@@ -232,11 +232,11 @@ function Client() {
      */
     function render(pointer) {
         if (!ready) return;
-		//game.debug.text(" player ID: "+myCaptain.playerID+" team ID: "+myCaptain.teamID+" HP: "+myCaptain.hp,32,32);
-		//game.debug.text(" my team score: "+ myTeamScore+" opponent team score: "+opponentTeamScore,32,54);
+		game.debug.text(" player ID: "+myCaptain.playerID+" team ID: "+myCaptain.teamID+" HP: "+myCaptain.hp,32,32);
+		game.debug.text(" my team score: "+ myTeamScore+" opponent team score: "+opponentTeamScore,32,54);
         //game.debug.text(" x:" + myCaptain.sprite.body.x + "   y:" + myCaptain.sprite.body.y + " player ID:" + myCaptain.playerID + " total other players:" + captains.length+ " HP:" + myCaptain.hp+" team ID: "+myCaptain.teamID, 32, 32);
 		//game.debug.text(" isShoot: "+ myCaptain.isShooting + " killHook: " + myCaptain.killHook + " hookReturn: "+myCaptain.hookReturn + " beingHooked: "+myCaptain.beingHooked + " respawn: "+myCaptain.respawn,32,54);
-		game.debug.text("last time update for my character: "+myCaptain.lastUpdate+ " delay: "+delay+" ms",32,32);
+		game.debug.text("last time update for my character: "+myCaptain.lastUpdate+ " delay: "+delay+" ms",32,76);
         //game.debug.spriteInfo(sprite, 32, 450);
     }
 }

@@ -124,16 +124,16 @@ function Player(_x, _y, _pid, _socket)
 		if(!this.beingHooked){
 			//if(!collideWithPillars(this.x,this.y)){
 				if(direction=="left"){
-					this.x+=(-100)*0.02602;
+					this.x+=(-50)*0.02602;
 				}
 				else if(direction=="right"){
-					this.x+=(100)*0.02602;
+					this.x+=(50)*0.02602;
 				}
 				else if(direction=="up"){
-					this.y+=(-100)*0.02602;
+					this.y+=(-50)*0.02602;
 				}
 				else if(direction=="down"){
-					this.y+=(100)*0.02602;
+					this.y+=(50)*0.02602;
 				}
 			//}
 		}
