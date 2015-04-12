@@ -48,8 +48,13 @@ function Captain(game,xPos,yPos,sid){
 	this.hud = Phaser.Plugin.HUDManager.create(game, this, 'captainHUD');
   	this.healthHUD = this.hud.addBar(0,-20, 32, 2, 100, 'hp', this, Phaser.Plugin.HUDManager.HEALTHBAR, false);
   	this.healthHUD.bar.anchor.setTo(0.5, 0.5);
-  	this.sprite.addChild(this.healthHUD.bar);
-	
+
+	var style = { font: "10px Arial", fill: "#ff0044", align: "center" };
+	this.nameLabel = game.add.text(0, -24, this.playerID, style);
+	this.nameLabel.anchor.set(0.5);
+	this.sprite.addChild(this.healthHUD.bar);
+	this.sprite.addChild(this.nameLabel);
+
 	this.isDead = function(){
 		if(this.hp<=0){
 			return true;
