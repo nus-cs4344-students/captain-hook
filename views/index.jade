@@ -32,7 +32,7 @@ html
                   div(class='red column' style='min-height:40rem;max-height:40rem')
                     h2(class='ui centered header') Players List
                     h3(class='ui dividing header')
-                    div(class='ui divided list' style='overflow:auto;max-height:32rem')
+                    div(id='player_list' class='ui divided list' style='overflow:auto;max-height:32rem')
                       // create player item
                       div(cass='item')
                         img(class='ui avatar image' src='assets/daniel.jpg')
@@ -44,7 +44,7 @@ html
                     h3(class='ui dividing header')
                     div(class="field")
                       // append text message
-                      textarea(id='chatarea' style='min-height:28rem;max-height:28rem;min-width:23rem;max-width:23rem')
+                      textarea(id='chatarea' style='color: #006600;min-height:28rem;max-height:28rem;min-width:23rem;max-width:23rem')
                     h3(class='ui dividing header')
 
                     div(class='ui center aligned grid')
@@ -53,11 +53,11 @@ html
                           div(class='ui labeled input' style='min-height:1rem;max-height:1rem;font-size:0.8rem')
                             div(class='ui label').
                               Message:
-                            input(placeholder='type your message ...' type='text')
+                            input(id='message_input', placeholder='type your message ...' type='text')
                       div(class='five wide column')
                         div(class='centered column')
                           // submit text message
-                          div(class="ui submit button" style='min-height:2.1rem;max-height:2.1rem;font-size:0.8rem' onclick="appendText()") Submit
+                          div(class="ui submit button" style='min-height:2.1rem;max-height:2.1rem;font-size:0.8rem' onclick="client.sendChatMessage()") Submit
 
                   div(class='teal column' style='min-height:40rem;max-height:40rem')
                     h2(class='ui centered header') Room List

@@ -12,9 +12,6 @@ var http = require('http');
 var sockjs = require("sockjs");
 require('../server/CHServer');
 
-// for room server
-require('../server/ChatServer');
-
 /**
  * Get port from environment and store in Express.
  */
@@ -27,14 +24,6 @@ app.set('port', port);
  */
 
 var server = http.createServer(app);
-
-/**
- * Create Chat server
- */
-var chatSock = sockjs.createServer();
-chatSock.installHandlers(server, {prefix:'/chat'});
-var chatServer = new ChatServer(chatSock);
-chatServer.start();
 
 /**
  * Create Game server

@@ -3,6 +3,7 @@
 var SERVERPATH = "./";
 require(SERVERPATH + "Player.js");
 require(SERVERPATH + "Config.js");
+var roomScript = require(SERVERPATH + 'RoomLogic.js');
 
 function CHServer(sock) {
 
@@ -11,6 +12,11 @@ function CHServer(sock) {
     var socket = sock;
     var sockets = {}; // Associative array for sockets, indexed via player ID
     var players = {}; // Associative array for players, indexed via socket ID
+
+	// array for lobby players
+	var roomList = [];
+	var playerList = [];
+
 	var team1Score = 0;
 	var team0Score = 0;
 
@@ -47,7 +53,7 @@ function CHServer(sock) {
 				}
 			}
 		}
-		
+
 		//for(var i=0;i<players.length;i++){
 		for(var i in players){
 			p1 = players[i];
@@ -134,6 +140,19 @@ function CHServer(sock) {
     this.start = function() {
         // Connection established from a client socket
         socket.on("connection", function(conn) {
+			// Create new player on connected
+			var lobby_player = new Player(0, 0, "player-" + playerList.length, conn);
+			// Add to PlayerList
+			playerList.push(lobby_player);
+
+			console.log("[!] " + lobby_player.name + " connected!");
+
+			// and tell everyone.
+			BroadcastAll({
+				type: "new_lobby_player",
+				name: lobby_player.name
+			}, lobby_player);
+
             newPlayer(conn);
 
             // When the client closes the connection to the
@@ -158,6 +177,28 @@ function CHServer(sock) {
                 }
 
                 switch (message.type) {
+					// for chatting
+					case "chat":
+						console.log('Broadcast : '+message.msg + ' for ' + lobby_player.name);
+						var json_msg = {
+							'type': 'incomming_msg',
+							'msg': message.msg,
+							'name': lobby_player.name
+						};
+						GlobalChat(json_msg, lobby_player);
+						break;
+
+					case "join_lobby":
+						var player = players[conn.id];
+						var pid = players[conn.id].pid;
+						broadcastUnless({
+								type: "chat_msg",
+								id: pid,
+								msg: message.msg},
+							pid
+						);
+						break;
+
                     case "join":
                         var player = players[conn.id];
                         var pid = players[conn.id].pid;
@@ -207,6 +248,17 @@ function CHServer(sock) {
             });
         });
 
+		setInterval(function(){
+			var nameList = [];
+			playerList.forEach(function(p){
+				nameList.push(p.name);
+			});
+			broadcast({
+				type: 'update_player_list',
+				list: nameList
+			})
+		}, 10);
+
         // cal the game loop
         setInterval(function() {gameLoop();}, 1000/Config.FRAME_RATE);
     };
@@ -233,6 +285,12 @@ function CHServer(sock) {
         sockets[nextPID] = conn;
         console.log('New player ' + conn.id + ' added.\n');
     };
+
+	/**
+	 * New joined player in lobby
+	 */
+	var newPlayerForLobby = function(conn) {
+	};
 
     /*
      * private method: broadcast(msg)
@@ -275,7 +333,61 @@ function CHServer(sock) {
      */
     var unicast = function (socket, msg) {
         socket.write(JSON.stringify(msg));
-    }
+    };
+
+	// Add remove function for arrays
+	Array.prototype.remove = function(e) {
+		for (var i = 0; i < this.length; i++) {
+			if (e == this[i]) { return this.splice(i, 1); }
+		}
+	};
+
+	// Add find by name function for arrays (to find player or room)
+	Array.prototype.find = function(name) {
+		for (var i = 0; i < this.length; i++) {
+			if (name == this[i].name) { return this[i]; }
+		}
+	};
+
+	// Add trim feature
+	String.prototype.trim=function(){return this.replace(/^\s+|\s+$/g, '');};
+	String.prototype.ltrim=function(){return this.replace(/^\s+/,'');};
+	String.prototype.rtrim=function(){return this.replace(/\s+$/,'');};
+	String.prototype.fulltrim=function(){return this.replace(/(?:(?:^|\n)\s+|\s+(?:$|\n))/,'');};
+
+	// Add startsWith and endsWidth function for strings
+	String.prototype.startsWith = function(prefix) {
+		return this.indexOf(prefix) === 0;
+	};
+
+	String.prototype.endsWith = function(suffix) {
+		return this.match(suffix+"$") == suffix;
+	};
+
+	// Global Broadcast Function
+	function BroadcastAll(message, except)
+	{
+		playerList.forEach(function(p){
+			if (p != except)
+			{
+				p.socket.write(JSON.stringify(message));
+			}
+		});
+	}
+
+	function GlobalChat(message, except)
+	{
+		if (except.room == null) // Only players in Global lobby can send message
+		{
+			playerList.forEach(function(p){
+				if (p != except && p.room == null) // Only players in Global lobby can receive the message
+				{
+					p.socket.write(JSON.stringify(message));
+				}
+			});
+		}
+	}
+
 }
 
 function distanceBetweenTwoPoints(x1,y1,x2,y2){
@@ -285,5 +397,6 @@ function distanceBetweenTwoPoints(x1,y1,x2,y2){
 	var distance = Math.sqrt(diffX*diffX+diffY*diffY);
 	return distance;
 }
+
 
 global.CHServer = CHServer;
