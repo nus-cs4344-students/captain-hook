@@ -19,6 +19,7 @@ function Client() {
     var game = new Phaser.Game(800, 608, Phaser.CANVAS, 'captain-hook', { preload: preload, create: create, update: update, render: render });
 
     function preload() {
+        game.load.image('tailBit', '../assets/hookTail.png')
         game.load.spritesheet('captain1', '../assets/captain1SpriteSheet.png', 32, 32);
         game.load.spritesheet('captain2', '../assets/captain2SpriteSheet.png', 32, 32);
         game.load.image('star', '../assets/star.png');
@@ -32,33 +33,6 @@ function Client() {
     var layer2;
     function create() {
         game.physics.startSystem(Phaser.Physics.ARCADE);
-
-        // platforms = game.add.group();
-        // platforms.enableBody = true;
-
-        // ledge1 = platforms.create(270, 000, 'ground');
-        // ledge1.scale.setTo(0.5, 1.5);
-        // ledge1.body.immovable = true;
-
-        // ledge2 = platforms.create(520, 000, 'ground');
-        // ledge2.scale.setTo(0.5, 1.5);
-        // ledge2.body.immovable = true;
-
-        // pillar1 = platforms.create(650, 100, 'ground');
-        // pillar1.scale.setTo(0.5, 0.04);
-        // pillar1.body.immovable = true;
-
-        // pillar2 = platforms.create(650, 500, 'ground');
-        // pillar2.scale.setTo(0.5, 0.04);
-        // pillar2.body.immovable = true;
-
-        // pillar3 = platforms.create(150, 100, 'ground');
-        // pillar3.scale.setTo(0.5, 0.04);
-        // pillar3.body.immovable = true;
-
-        // pillar4 = platforms.create(150, 500, 'ground');
-        // pillar4.scale.setTo(0.5, 0.04);
-        // pillar4.body.immovable = true;
 
         game.stage.backgroundColor = '#313131';
         map = game.add.tilemap('battlefield');
@@ -76,12 +50,6 @@ function Client() {
         cursors = game.input.keyboard.createCursorKeys();
 		wKey = game.input.keyboard.addKey(Phaser.Keyboard.W);
 		sKey = game.input.keyboard.addKey(Phaser.Keyboard.S);
-
-        //server do this, client just nid update positions.
-        // pillars[0] = pillar1;
-        // pillars[1] = pillar2;
-        // pillars[2] = pillar3;
-        // pillars[3] = pillar4;
     }
 
 
@@ -111,7 +79,8 @@ function Client() {
      *
      */
     this.run = function() {
-        sock = new SockJS('http://' + Config.SERVER_NAME + ':' + Config.PORT + '/captain');
+        console.log(location.host);
+        sock = new SockJS('http://' + Config.SERVER_NAME + '/captain');
 
         var count= [];
         sock.onmessage = function(e) {
