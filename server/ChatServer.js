@@ -5,6 +5,21 @@ require(SERVERPATH + 'Config.js');
 require(SERVERPATH + 'Player.js');
 require(SERVERPATH + 'Utilities.js');
 
+function ChatServer(sock) {
+    var socket = sock;
+
+    this.start = function() {
+        // Connection established from a client socket
+        socket.on("connection", function(conn) {
+            console.log('connected');
+
+        })
+    }
+}
+
+global.ChatServer = ChatServer;
+
+
 /**
  Script: Node.JS Game Server - Room Server
  Template Author: Huy Tran
@@ -55,6 +70,7 @@ require(SERVERPATH + 'Utilities.js');
  SEND:		[READY] / [CANCEL]
  RECEIVE:	[PLAYERREADY;<player-name>] / [PLAYERCANCEL;<player-name>] (Players already in room)
  */
+/*
 var roomList = [];
 var playerList = [];
 
@@ -190,3 +206,4 @@ net.createServer(function(socket) {
 }).listen(Config.ROOMSERVER_PORT);
 
 console.log("Room Server is running at port " + Config.ROOMSERVER_PORT);
+*/

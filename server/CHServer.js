@@ -2,7 +2,6 @@
 
 var SERVERPATH = "./";
 require(SERVERPATH + "Player.js");
-require(SERVERPATH + "Utilities.js");
 require(SERVERPATH + "Config.js");
 
 function CHServer(sock) {

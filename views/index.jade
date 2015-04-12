@@ -14,9 +14,12 @@ html
     script(type='text/javascript', src="http://cdnjs.cloudflare.com/ajax/libs/jquery.address/1.6/jquery.address.min.js")
     script(type='text/javascript', src="/dist/semantic.js")
 
-    script(type='text/javascript', src="/javascripts/LobbyClient.js")
+    script(type='text/javascript', src="/javascripts/sockjs.min.js")
+    script(type='text/javascript' src='javascripts/scriptLoader.js')
 
-  body(id='home')
+    script(type='text/javascript' src='javascripts/Config.js')
+
+  body(id='home' onload="loadScript('', 'javascripts/LobbyClient.js')")
     content
         div(class='ui inverted masthead segment')
           div(class='ui page grid')

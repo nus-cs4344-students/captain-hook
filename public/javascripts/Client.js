@@ -81,7 +81,7 @@ function Client() {
         var count= [];
         sock.onmessage = function(e) {
             var message = JSON.parse(e.data);
-            console.log('Client received : ' + e.data);
+            //console.log('Client received : ' + e.data);
             switch (message.type) {
                 case "joined":
                     // Server allows THIS player to join game
@@ -110,9 +110,9 @@ function Client() {
                     break;
 
                 case "update":
-                    console.log('Update position for ' + message.id);
+                    //console.log('Update position for ' + message.id);
 					var t = message.timestamp;
-					if(t<captains[message.id].lastUpdate){
+					if(captains[message.id] == undefined || t<captains[message.id].lastUpdate){
 						break;
 					}
                     playerId = message.id;

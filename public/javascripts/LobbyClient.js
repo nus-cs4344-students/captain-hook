@@ -4,7 +4,7 @@ function Client() {
 
     this.run = function() {
         console.log(location.host);
-        //sock = new SockJS('https://' + Config.SERVER_NAME + '/captain');
+        sock = new SockJS('https://' + Config.SERVER_NAME + '/chat');
     }
 
 }
