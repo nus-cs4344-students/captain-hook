@@ -121,13 +121,16 @@ function CHServer(sock) {
 				teamID: p.teamID,
 				playerTeamScore:playerTeamScore,
 				opponentTeamScore:opponentTeamScore,
+				playerDelay:p.delay,
 				timestamp:currentTime
 			};
 			for(var j in players){
 				var delay = players[j].getDelay();
 				var pid = players[j].pid;
 				//console.log("player("+pid+")'s delay: "+delay);
-				setTimeout(unicast(sockets[pid],states),delay);
+				setTimeout(function(){
+					unicast(sockets[pid],states);
+				},delay);
 			}
 		}
     };
@@ -198,6 +201,7 @@ function CHServer(sock) {
 						if((!players[conn.id].beingHooked)&&(message.isThrowHook)){
 							players[conn.id].setHookTarget(message.mouse_x,message.mouse_y);
 						}
+						//gameLoop();
 						break;
 					case "delay" :
 						players[conn.id].delay = message.delay;

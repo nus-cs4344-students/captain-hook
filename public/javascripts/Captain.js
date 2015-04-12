@@ -87,7 +87,9 @@ function Captain(game,xPos,yPos,sid){
 	}
 }
 
-
+Captain.prototype.getLastUpdate = function(){
+	return this.lastUpdate;
+}
 Captain.prototype.update = function(x, y, hp, hook_x, hook_y,beingHooked,hookReturn,killHook,isShoot,respawn,timestamp,playerDelay) {
 	this.sprite.x = x;
 	this.sprite.y = y;

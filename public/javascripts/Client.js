@@ -1,7 +1,7 @@
 
 function Client() {
     var sock;           // socket to server
-    var captains = [];  // Array of captains currently in game
+    var captains = {};  // Array of captains currently in game
     var hooks = [];     // Array of hooks
     var myCaptain;
     var myHook;
@@ -147,7 +147,7 @@ function Client() {
                 case "update":
                     console.log('Update position for ' + message.id);
 					var t = message.timestamp;
-					if(t<captains[message.id].lastUpdate){
+					if(t<captains[message.id].getLastUpdate){
 						break;
 					}
                     playerId = message.id;
@@ -162,6 +162,7 @@ function Client() {
 					killHook = message.killHook;
 					respawn = message.respawn;
 					timestamp = message.timestamp;
+					playerDelay = message.playerDelay;
                     var direction = checkDirection(captains[playerId].sprite.x, captains[playerId].sprite.y, playerNewPos_x, playerNewPos_y);
                     switch (direction) {
                         case "up" :
@@ -184,7 +185,7 @@ function Client() {
                             //}
                             break;
                     }
-                    captains[playerId].update(playerNewPos_x, playerNewPos_y, playerHp, hookNewPos_x, hookNewPos_y,beingHooked,hookReturn,killHook,isShoot,respawn,timestamp);
+                    captains[playerId].update(playerNewPos_x, playerNewPos_y, playerHp, hookNewPos_x, hookNewPos_y,beingHooked,hookReturn,killHook,isShoot,respawn,timestamp,playerDelay);
 					
 
                     if(myCaptain.playerID==message.id){
@@ -239,12 +240,14 @@ function Client() {
         } 
 		
         if (isKeyDown || isThrowHook) {
-            sendToServer({type:"playerAction",
+			//setTimeout(function(){
+				sendToServer({type:"playerAction",
                             id: myCaptain.playerID,
                             direction: cursorDirection,
                             isThrowHook: isThrowHook,
                             mouse_x: game.input.x,
                             mouse_y: game.input.y});
+			//},delay);
         }    
 		
 		if (wKey.isDown){
