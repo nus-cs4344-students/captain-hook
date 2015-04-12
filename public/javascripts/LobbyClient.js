@@ -15,6 +15,10 @@ function LobbyClient() {
                     var text = message.name + ' joined!';
                     document.getElementById('chatarea').value = document.getElementById('chatarea').value +'\nInfo : ' + text;
                     break;
+                case 'player_disconnection':
+                    var text = message.name + ' disconnected!';
+                    document.getElementById('chatarea').value = document.getElementById('chatarea').value +'\nInfo : ' + text;
+                    break;
                 case "incomming_msg":
                     var text = message.name + ' says : ' + message.msg;
                     document.getElementById('chatarea').value = document.getElementById('chatarea').value +'\n' + text;
@@ -24,11 +28,9 @@ function LobbyClient() {
                     var players = message.list;
                     var ui = document.getElementById('player_list');
 
-                    if (player_size == 0) {
-                        $(ui).empty();
-                    }
-
                     if (player_size != players.length) {
+                        $(ui).empty();
+
                         players.forEach(function (p) {
                             var item = document.createElement('div');
                             item.class = 'item';

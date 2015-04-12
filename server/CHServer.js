@@ -162,7 +162,23 @@ function CHServer(sock) {
                 delete players[conn.id];
                 broadcastUnless({
                     type: "delete",
-                    id: pid}, pid)
+                    id: pid}, pid);
+
+				// for chat room
+
+				lobby_player.leaveRoom(); // Leave all room before disconnected
+
+				playerList.remove(lobby_player);
+
+				console.log("[!] " + lobby_player.name + " disconnected!");
+
+				// Tell everyone Player disconnected
+                BroadcastAll({
+                    type: 'player_disconnection',
+                    name: lobby_player.name
+                }, null);
+				// Close connection
+				conn.end();
             });
 
             // When the client send something to the server.
@@ -253,10 +269,10 @@ function CHServer(sock) {
 			playerList.forEach(function(p){
 				nameList.push(p.name);
 			});
-			broadcast({
+			BroadcastAll({
 				type: 'update_player_list',
 				list: nameList
-			})
+			}, null)
 		}, 10);
 
         // cal the game loop
