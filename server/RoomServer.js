@@ -3,6 +3,7 @@ var roomScript = require(SERVERPATH + 'RoomLogic.js');
 var net = require('net');
 require(SERVERPATH + 'Config.js');
 require(SERVERPATH + 'Player.js');
+require(SERVERPATH + 'Utilities.js');
 
 /**
  Script: Node.JS Game Server - Room Server
