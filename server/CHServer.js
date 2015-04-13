@@ -69,8 +69,8 @@ function CHServer(sock) {
 			}
 		}
 		
-		for(var i in players){
-			p = players[i];
+		for(var i in room_players){
+			p = room_players[i];
 			if(p.isFallInRiver()){
 				p.hp -= 0.2;
 			}
