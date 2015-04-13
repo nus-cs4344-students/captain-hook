@@ -69,6 +69,13 @@ function CHServer(sock) {
 			}
 		}
 		
+		for(var i in players){
+			p = players[i];
+			if(p.isFallInRiver()){
+				p.hp -= 0.2;
+			}
+		}
+		
 		//respawn if any player's hp reach 0
 		for(var i in room_players){
 			var p = room_players[i];

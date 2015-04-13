@@ -14,6 +14,7 @@ function Client() {
 	var myTeamScore = 0;
 	var opponentTeamScore = 0;
 	var delay=0;
+	var gameInfor = "";
     //var that = this;
 
     var game = new Phaser.Game(800, 608, Phaser.CANVAS, 'captain-hook', { preload: preload, create: create, update: update, render: render });
@@ -21,6 +22,7 @@ function Client() {
     function preload() {
         game.load.tilemap('battlefield', '../assets/map.json', null, Phaser.Tilemap.TILED_JSON);
         game.load.image('tiles', '../assets/225835_hyptosis_tile-art-batch-1.png');
+        game.load.image('tailBit', '../assets/hookTail.png')
         game.load.spritesheet('captain1', '../assets/captain1SpriteSheet.png', 32, 32);
         game.load.spritesheet('captain2', '../assets/captain2SpriteSheet.png', 32, 32);
         game.load.image('star', '../assets/star.png');
@@ -49,7 +51,65 @@ function Client() {
         cursors = game.input.keyboard.createCursorKeys();
 		wKey = game.input.keyboard.addKey(Phaser.Keyboard.W);
 		sKey = game.input.keyboard.addKey(Phaser.Keyboard.S);
+		var style = { font: "20px Arial", fill: "#ff0044", align: "center" };
+		gameInfo = game.add.text(230, 20, "", style);
+		///*
+		if((window.DeviceMotionEvent)||('listenForDeviceMovement' in window)){
+			window.addEventListener("devicemotion", onDeviceMotion,false);
+		}
+		//*/
     }
+	///*
+	function onDeviceMotion (e){
+		var x = e.accelerationIncludingGravity.x;
+		var y = e.accelerationIncludingGravity.y;
+		//var z = e.accelerationIncludingGravity.z;
+		var max = Math.max(Math.abs(x),Math.abs(y));
+        var isKeyDown = true;
+        var isThrowHook = false;
+        if (game.input.activePointer.isDown) {
+            isThrowHook = true;
+        }
+
+        var cursorDirection = "";
+		if(max==Math.abs(x)){
+			if(x>0){
+				cursorDirection = "left";
+				myCaptain.sprite.animations.play('left');
+			}
+			else if(x<0){
+				cursorDirection = "right";
+				myCaptain.sprite.animations.play('right');
+			}
+			else {
+				myCaptain.sprite.animations.stop();
+				isKeyDown = false;
+			}
+		}
+		else if(max==Math.abs(y)){
+			if(y<0){
+				cursorDirection = "up";
+				myCaptain.sprite.animations.play('up');
+			}
+			else if(y>0){
+				cursorDirection = "down";
+				myCaptain.sprite.animations.play('down');
+			}
+			else {
+				myCaptain.sprite.animations.stop();
+				isKeyDown = false;
+			}
+		}
+		
+        if (isKeyDown || isThrowHook) {
+            sendToServer({type:"playerAction",
+                            id: myCaptain.playerID,
+                            direction: cursorDirection,
+                            isThrowHook: isThrowHook,
+                            mouse_x: game.input.x,
+                            mouse_y: game.input.y});
+        } 
+	}
 
     /*
      * private method: sendToServer(msg)
@@ -59,12 +119,12 @@ function Client() {
      * a string.
      */
     var sendToServer = function (msg) {
-        console.log("send-> " + JSON.stringify(msg));
+        //console.log("send-> " + JSON.stringify(msg));
 		var date = new Date();
 		var currentTime = date.getTime();
 		msg["timestamp"] = currentTime;
         sock.send(JSON.stringify(msg));
-    }
+    };
 
     /*
      * priviledge method: run()
@@ -101,10 +161,14 @@ function Client() {
                     playerStartPos_y = message.y;
                     captains[playerId] = new Captain(game, playerStartPos_x, playerStartPos_y, playerId, message.tid);
                     break;
+					
+				case "message":
+					alert(message.content);
+					break;
 
                 case "delete":
                     // A player has left the game
-                    console.log('Delete Disconnected Player : ' + message.id);
+                    //console.log('Delete Disconnected Player : ' + message.id);
                     playerId = message.id;
                     captains[playerId].sprite.kill();
                     delete captains[playerId];
@@ -160,13 +224,13 @@ function Client() {
                     break;
 
                 default:
-                    console.log("error: undefined command " + message.type);
+                    //console.log("error: undefined command " + message.type);
             }
         };
 
         sock.onclose = function() {
             // Connection to server has closed.  Delete everything.
-            console.log('Clear All Player');
+            //console.log('Clear All Player');
             //clearAllPlayers();
         };
 
@@ -236,11 +300,20 @@ function Client() {
 
     function render(pointer) {
         if (!ready) return;
-		game.debug.text(" player ID: "+myCaptain.playerID+" team ID: "+myCaptain.teamID+" HP: "+myCaptain.hp,32,32);
-		game.debug.text(" my team score: "+ myTeamScore+" opponent team score: "+opponentTeamScore,32,54);
+		var myTeam = "";
+		if(myCaptain.teamID==1){
+			myTeam = "blue";
+		}
+		else{
+			myTeam = "red";
+		}
+		gameInfo.setText(" player ID: "+myCaptain.playerID+" team Color: "+myTeam+" HP: "+myCaptain.hp+"\n"+" my team score: "+ myTeamScore+"\n"+" opponent team score: "+opponentTeamScore);
+		//game.debug.text(" player ID: "+myCaptain.playerID+" team Color: "+myTeam+" HP: "+myCaptain.hp,232,32);
+		//game.debug.text(" my team score: "+ myTeamScore,302,54);
+		//game.debug.text(" opponent team score: "+opponentTeamScore,302,76);
         //game.debug.text(" x:" + myCaptain.sprite.body.x + "   y:" + myCaptain.sprite.body.y + " player ID:" + myCaptain.playerID + " total other players:" + captains.length+ " HP:" + myCaptain.hp+" team ID: "+myCaptain.teamID, 32, 32);
 		//game.debug.text(" isShoot: "+ myCaptain.isShooting + " killHook: " + myCaptain.killHook + " hookReturn: "+myCaptain.hookReturn + " beingHooked: "+myCaptain.beingHooked + " respawn: "+myCaptain.respawn,32,54);
-		game.debug.text("last time update for my character: "+myCaptain.lastUpdate+ " delay: "+delay+" ms",32,76);
+		//game.debug.text("last time update for my character: "+myCaptain.lastUpdate+ " delay: "+delay+" ms",32,76);
         //game.debug.spriteInfo(sprite, 32, 450);
     }
 
