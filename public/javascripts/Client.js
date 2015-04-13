@@ -22,7 +22,7 @@ function Client() {
     function preload() {
         game.load.tilemap('battlefield', '../assets/map.json', null, Phaser.Tilemap.TILED_JSON);
         game.load.image('tiles', '../assets/225835_hyptosis_tile-art-batch-1.png');
-        game.load.image('tailBit', '../assets/hookTail.png')
+        game.load.image('tailBit', '../assets/hookTail.png');
         game.load.spritesheet('captain1', '../assets/captain1SpriteSheet.png', 32, 32);
         game.load.spritesheet('captain2', '../assets/captain2SpriteSheet.png', 32, 32);
         game.load.image('star', '../assets/star.png');
