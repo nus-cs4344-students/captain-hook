@@ -1,9 +1,9 @@
-function Captain(game,xPos,yPos,sid){
+function Captain(game,xPos,yPos,sid,tid){
 	this.hook;
 	
 	// Initialize Captain's Sprite
 	this.sprite;
-	if (sid%2 == 0) {
+	if (tid == 0) {
 		this.sprite = game.add.sprite(xPos,yPos,'captain1');
 	} else {
 		this.sprite = game.add.sprite(xPos,yPos,'captain2');
@@ -31,7 +31,7 @@ function Captain(game,xPos,yPos,sid){
 	this.hp = 100;
 	this.hookID = sid;
 	this.playerID = sid;
-	this.teamID = sid%2;
+	this.teamID = tid;		// determined by server
 	this.leftOrRight = sid;
 	this.hookedPlayer = -1;
 	this.xVelocity = this.sprite.body.velocity.x;

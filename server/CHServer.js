@@ -3,6 +3,7 @@
 var SERVERPATH = "./";
 require(SERVERPATH + "Player.js");
 require(SERVERPATH + "Config.js");
+require(SERVERPATH + "Room.js");
 var roomScript = require(SERVERPATH + 'RoomLogic.js');
 
 function CHServer(sock) {
@@ -138,10 +139,16 @@ function CHServer(sock) {
     };
 
     this.start = function() {
+		// create default room
+		var room = new Room('game', 10);
+		roomList.push(room);
+
         // Connection established from a client socket
         socket.on("connection", function(conn) {
 			// Create new player on connected
-			var lobby_player = new Player(0, 0, "player-" + playerList.length, conn);
+			nextPID++;
+			var lobby_player = new Player(0, 0, nextPID, conn);
+			lobby_player.name = "player-" + nextPID;
 			// Add to PlayerList
 			playerList.push(lobby_player);
 
@@ -186,72 +193,61 @@ function CHServer(sock) {
             conn.on('data', function (data) {
                 var message = JSON.parse(data);
 
-				if (!lobby_player.inRoom) {
-					switch (message.type) {
-						// for chatting
-						case "chat":
-							console.log('Broadcast : ' + message.msg + ' for ' + lobby_player.name);
-							var json_msg = {
-								'type': 'incomming_msg',
-								'msg': message.msg,
-								'name': lobby_player.name
-							};
-							GlobalChat(json_msg, lobby_player);
-							break;
+                switch (message.type) {
+                    // for chatting
+                    case "chat":
+                        console.log('Broadcast : ' + message.msg + ' for ' + lobby_player.name);
+                        var json_msg = {
+                            'type': 'incomming_msg',
+                            'msg': message.msg,
+                            'name': lobby_player.name
+                        };
+                        GlobalChat(json_msg, lobby_player);
+                        break;
 
-						case "join_lobby":
-							var player = room_players[conn.id];
-							var pid = room_players[conn.id].pid;
-							broadcastUnless({
-									type: "chat_msg",
-									id: pid,
-									msg: message.msg
-								},
-								pid
-							);
-							break;
+                    case "join_room":
+                        var room_name = message.room;
+                        console.log(lobby_player.name + " > SELECTED ROOM: " + room_name);
+                        lobby_player.joinRoom(room_name, roomList);
+                        newPlayerInRoom(conn, lobby_player);
 
-						case "join_room":
-							var room_name = message.room_name;
-							console.log(lobby_player.name + " > SELECTED ROOM: " + room_name);
-							lobby_player.joinRoom(room_name);
-							newPlayerInRoom(conn, lobby_player);
+                        var player = room_players[conn.id];
+                        var pid = room_players[conn.id].pid;
+                        // A client has requested to join.
+                        // Initialize a ship at random position
+                        unicast(conn, {
+                            type:"joined",
+                            id: pid,
+                            x: player.x,
+                            y: player.y,
+							tid: player.teamID
+                        });
 
-							var player = room_players[conn.id];
-							var pid = room_players[conn.id].pid;
-							// A client has requested to join.
-							// Initialize a ship at random position
-							unicast(conn, {
-								type:"joined",
-								id: pid,
-								x: player.x,
-								y: player.y
-							});
+                        // and tell everyone.
+                        broadcastUnless({
+                            type: "new",
+                            id: pid,
+                            x: player.x,
+                            y: player.y,
+							tid: player.teamID
+                        }, pid);
 
-							// and tell everyone.
-							broadcastUnless({
-								type: "new",
-								id: pid,
-								x: player.x,
-								y: player.y
-							}, pid);
-
-							// Tell this new guy who else is in the game.
-							for (var i in room_players) {
-								if (i != conn.id) {
-									if (room_players[i] !== undefined) {
-										unicast(sockets[pid], {
-											type:"new",
-											id: room_players[i].pid,
-											x: room_players[i].x,
-											y: room_players[i].y
-										});
-									}
-								}
-							}
-							break;
-					}
-				}
+                        // Tell this new guy who else is in the game.
+                        for (var i in room_players) {
+                            if (i != conn.id) {
+                                if (room_players[i] !== undefined) {
+                                    unicast(sockets[pid], {
+                                        type:"new",
+                                        id: room_players[i].pid,
+                                        x: room_players[i].x,
+                                        y: room_players[i].y,
+										tid: room_players[i].teamID
+                                    });
+                                }
+                            }
+                        }
+                        break;
+                }
 
                 var p = room_players[conn.id];
                 if (p === undefined) {
@@ -299,25 +295,22 @@ function CHServer(sock) {
      * Create and init the new player.
      */
     var newPlayerInRoom = function (conn, player) {
-        nextPID ++;
         // Create player object and insert into room_players with key = conn.id
-		var team = nextPID%2;
-		if(team ==1){
+		var team = roomList[0].playerCount%2;
+		console.log('number '+ roomList[0].playerCount);
+		if(team == 1){
 			player.x = 100;
-			player.y = 100*nextPID;
-			player.pid = conn.id;
+			player.y = 100;
 			room_players[conn.id] = player;
 		}
 		else{
 			player.x = 700;
-			player.y = 100*(nextPID-1);
-			player.pid = conn.id;
+			player.y = 100*(team+1);
 			room_players[conn.id] = player;
 		}
-        //room_players[conn.id] = new Player(100, 100, conn.id, conn);
-        room_players[conn.id].pid = nextPID;
-		room_players[conn.id].teamID = nextPID%2;
-        sockets[nextPID] = conn;
+
+		room_players[conn.id].teamID = team;
+        sockets[player.pid] = conn;
         console.log('New player ' + conn.id + ' added.\n');
     };
 

@@ -88,7 +88,7 @@ function Client() {
                     myId = message.id;
                     myStartPos_x = message.x;
                     myStartPos_y = message.y;
-                    myCaptain = new Captain(game, myStartPos_x, myStartPos_y, myId);   
+                    myCaptain = new Captain(game, myStartPos_x, myStartPos_y, myId, message.tid);
                     captains[myId] = myCaptain;
                     ready = true;
                     break;
@@ -98,7 +98,7 @@ function Client() {
                     playerId = message.id;
                     playerStartPos_x = message.x;
                     playerStartPos_y = message.y;
-                    captains[playerId] = new Captain(game, playerStartPos_x, playerStartPos_y, playerId);
+                    captains[playerId] = new Captain(game, playerStartPos_x, playerStartPos_y, playerId, message.tid);
                     break;
 
                 case "delete":
@@ -171,7 +171,7 @@ function Client() {
 
         sock.onopen = function() {
             // When connection to server is open, ask to join.
-            sendToServer({type:"join_room"});
+            sendToServer({type:"join_room", room: "game"});
         }
     };
 

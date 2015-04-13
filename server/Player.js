@@ -20,8 +20,9 @@ function Player(_x, _y, _pid, _socket)
 	this.directionX;
 	this.directionY;
 	this.hp = 100;
-    this.name = _pid;
-    this.pid = _pid;
+    this.name = _pid;		// custon name
+    this.pid = _pid; 		// socket id
+	this.id = _pid;			// unique number sequence
 	this.teamID = _pid;
     this.room = null;
     this.socket = _socket;
@@ -59,12 +60,12 @@ function Player(_x, _y, _pid, _socket)
         }
     };
 
-    this.joinRoom = function(roomName)
+    this.joinRoom = function(roomName, roomList)
     {
 		this.inRoom = true;
         var cplayer = this;
         var roomExist = false;
-		/*
+
         roomList.forEach(function(r){
             if (r.name == roomName)
             {
@@ -85,28 +86,27 @@ function Player(_x, _y, _pid, _socket)
                     }
                     cplayer.room = r;
                     console.log("[!] " + cplayer.name + " joined room " + r.name);
-                    r.broadCast("[JOINROOM;" + cplayer.name + "]", cplayer);
-                    cplayer.socket.write("[JOINEDROOM;" + r.name + "]");
+                    //r.broadCast("[JOINROOM;" + cplayer.name + "]", cplayer);
+                    //cplayer.socket.write("[JOINEDROOM;" + r.name + "]");
                 }
                 else
                 {
-                    cplayer.socket.write("[ROOMFULL;" + r.name + "]");
+                    //cplayer.socket.write("[ROOMFULL;" + r.name + "]");
                     console.log("[!] Room " + r.name + " is full");
                 }
             }
         });
         if (roomExist == false)
         {
-            cplayer.socket.write("[NOROOM;" + roomName + "]");
+            //cplayer.socket.write("[NOROOM;" + roomName + "]");
             console.log("[!] Room " + roomName + " not found");
         }
-        */
     };
 
     this.leaveRoom = function()
     {
 		this.inRoom = false;
-		/*
+
         if (this.room != null)
         {
             this.room.players.remove(this);
@@ -115,11 +115,10 @@ function Player(_x, _y, _pid, _socket)
             {
                 this.room.Wait();
             }
-            this.room.broadCast("[LEFTROOM;" + this.name + "]", this);
+            //this.room.broadCast("[LEFTROOM;" + this.name + "]", this);
             console.log("[!] " + this.name + " left room " + this.room.name);
             this.room = null;
         }
-        */
     };
 	//--------template for shiyu client reply-------------------------
 	/*
