@@ -28,6 +28,7 @@ function Player(_x, _y, _pid, _socket)
     this.is_ready = false;
 	this.delay = 0;
 	this.lastUpdate = new Date().getTime();
+	this.inRoom = false;
 
 	this.getDelay = function() {
         var errorPercentage = 20;
@@ -60,8 +61,10 @@ function Player(_x, _y, _pid, _socket)
 
     this.joinRoom = function(roomName)
     {
+		this.inRoom = true;
         var cplayer = this;
         var roomExist = false;
+		/*
         roomList.forEach(function(r){
             if (r.name == roomName)
             {
@@ -97,10 +100,13 @@ function Player(_x, _y, _pid, _socket)
             cplayer.socket.write("[NOROOM;" + roomName + "]");
             console.log("[!] Room " + roomName + " not found");
         }
+        */
     };
 
     this.leaveRoom = function()
     {
+		this.inRoom = false;
+		/*
         if (this.room != null)
         {
             this.room.players.remove(this);
@@ -113,6 +119,7 @@ function Player(_x, _y, _pid, _socket)
             console.log("[!] " + this.name + " left room " + this.room.name);
             this.room = null;
         }
+        */
     };
 	//--------template for shiyu client reply-------------------------
 	/*

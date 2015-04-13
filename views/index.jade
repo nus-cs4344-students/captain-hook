@@ -65,9 +65,9 @@ html
                     div(class='ui list' style='overflow:auto;max-height:32rem')
                       // add game room item
                       div(cass='item')
-                        div(class="ui labeled icon blue button")
+                        div(id='game' class="ui labeled icon blue button" onclick='client.sendJoinRoomMsg(this.id)')
                           i(class="game icon")
-                          div(class="detail") Game Room
+                          div(class="detail") Game Room 0
 
     content
         div(class="ui vertical feature segment")

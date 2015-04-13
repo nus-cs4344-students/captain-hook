@@ -171,7 +171,7 @@ function Client() {
 
         sock.onopen = function() {
             // When connection to server is open, ask to join.
-            sendToServer({type:"join"});
+            sendToServer({type:"join_room"});
         }
     };
 

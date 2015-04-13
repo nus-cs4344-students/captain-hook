@@ -11,9 +11,9 @@ function CHServer(sock) {
     var nextPID = 0;  // PID to assign to next connected player
     var socket = sock;
     var sockets = {}; // Associative array for sockets, indexed via player ID
-    var players = {}; // Associative array for players, indexed via socket ID
+    var room_players = {}; // Associative array for room_players, indexed via socket ID
 
-	// array for lobby players
+	// array for lobby room_players
 	var roomList = [];
 	var playerList = [];
 
@@ -24,17 +24,17 @@ function CHServer(sock) {
 		//update game states for each player
 		var p1;
 		var p2;
-		//for(var i = 0;i<players.length;i++){
-		for(var i in players){
-			p1 = players[i];
+		//for(var i = 0;i<room_players.length;i++){
+		for(var i in room_players){
+			p1 = room_players[i];
 			if(p1.isShoot){
 				if(p1.hookPillar){
 					p1.calculatePositionByPillar(p1.hx,p1.hy);
 				}
 				else{
-					//for(var j=0;j<players.length;j++){
-					for(var j in players){
-						p2 = players[j];
+					//for(var j=0;j<room_players.length;j++){
+					for(var j in room_players){
+						p2 = room_players[j];
 						if(p1.pid!=p2.pid){
 							//if(!p2.beingHooked){
 								if(distanceBetweenTwoPoints(p1.hx,p1.hy,p2.x,p2.y)<10){
@@ -54,12 +54,12 @@ function CHServer(sock) {
 			}
 		}
 
-		//for(var i=0;i<players.length;i++){
-		for(var i in players){
-			p1 = players[i];
-			//for(var j=0;j<players.length;j++){
-			for(var j in players){
-				p2 = players[j];
+		//for(var i=0;i<room_players.length;i++){
+		for(var i in room_players){
+			p1 = room_players[i];
+			//for(var j=0;j<room_players.length;j++){
+			for(var j in room_players){
+				p2 = room_players[j];
 				if(distanceBetweenTwoPoints(p1.x,p1.y,p2.x,p2.y)<20){
 					if(p1.teamID!=p2.teamID){
 						p1.hp--;
@@ -69,8 +69,8 @@ function CHServer(sock) {
 		}
 		
 		//respawn if any player's hp reach 0
-		for(var i in players){
-			var p = players[i];
+		for(var i in room_players){
+			var p = room_players[i];
 			p.respawn = false;
 			if(p.hp<1){
 				p.x = p.initialX;
@@ -90,13 +90,13 @@ function CHServer(sock) {
 				}
 			}
 		}
-		//console.log(players.length);
-		//for(var i=0;i<players.length;i++){
+		//console.log(room_players.length);
+		//for(var i=0;i<room_players.length;i++){
 		var date = new Date();
 		var currentTime = date.getTime();
-		for(var i in players){
+		for(var i in room_players){
 			//console.log("broadcasting");
-			var p = players[i];
+			var p = room_players[i];
 			var playerTeamScore;
 			var opponentTeamScore;
 			if(p.teamID==1){
@@ -128,9 +128,9 @@ function CHServer(sock) {
 				opponentTeamScore:opponentTeamScore,
 				timestamp:currentTime
 			};
-			for(var j in players){
-				var delay = players[j].getDelay();
-				var pid = players[j].pid;
+			for(var j in room_players){
+				var delay = room_players[j].getDelay();
+				var pid = room_players[j].pid;
 				//console.log("player("+pid+")'s delay: "+delay);
 				setTimeout(unicast(sockets[pid],states),delay);
 			}
@@ -148,22 +148,23 @@ function CHServer(sock) {
 			console.log("[!] " + lobby_player.name + " connected!");
 
 			// and tell everyone.
-			BroadcastAll({
+			BroadcastAllInLobby({
 				type: "new_lobby_player",
 				name: lobby_player.name
 			}, lobby_player);
 
-            newPlayer(conn);
-
             // When the client closes the connection to the
             // tell other clients the client left
             conn.on('close', function () {
-                var pid = players[conn.id].pid;
-                delete players[conn.id];
-                broadcastUnless({
-                    type: "delete",
-                    id: pid}, pid);
+				if (lobby_player.inRoom) {
+					delete room_players[conn.id];
+				}
 
+                broadcastUnless({
+                        type: "delete",
+                        id: lobby_player.pid
+                    },
+                    lobby_player.pid);
 				// for chat room
 
 				lobby_player.leaveRoom(); // Leave all room before disconnected
@@ -184,79 +185,91 @@ function CHServer(sock) {
             // When the client send something to the server.
             conn.on('data', function (data) {
                 var message = JSON.parse(data);
-                var p = players[conn.id];
+
+				if (!lobby_player.inRoom) {
+					switch (message.type) {
+						// for chatting
+						case "chat":
+							console.log('Broadcast : ' + message.msg + ' for ' + lobby_player.name);
+							var json_msg = {
+								'type': 'incomming_msg',
+								'msg': message.msg,
+								'name': lobby_player.name
+							};
+							GlobalChat(json_msg, lobby_player);
+							break;
+
+						case "join_lobby":
+							var player = room_players[conn.id];
+							var pid = room_players[conn.id].pid;
+							broadcastUnless({
+									type: "chat_msg",
+									id: pid,
+									msg: message.msg
+								},
+								pid
+							);
+							break;
+
+						case "join_room":
+							var room_name = message.room_name;
+							console.log(lobby_player.name + " > SELECTED ROOM: " + room_name);
+							lobby_player.joinRoom(room_name);
+							newPlayerInRoom(conn, lobby_player);
+
+							var player = room_players[conn.id];
+							var pid = room_players[conn.id].pid;
+							// A client has requested to join.
+							// Initialize a ship at random position
+							unicast(conn, {
+								type:"joined",
+								id: pid,
+								x: player.x,
+								y: player.y
+							});
+
+							// and tell everyone.
+							broadcastUnless({
+								type: "new",
+								id: pid,
+								x: player.x,
+								y: player.y
+							}, pid);
+
+							// Tell this new guy who else is in the game.
+							for (var i in room_players) {
+								if (i != conn.id) {
+									if (room_players[i] !== undefined) {
+										unicast(sockets[pid], {
+											type:"new",
+											id: room_players[i].pid,
+											x: room_players[i].x,
+											y: room_players[i].y
+										});
+									}
+								}
+							}
+							break;
+					}
+				}
+
+                var p = room_players[conn.id];
                 if (p === undefined) {
                     // we received data from a connection with
                     // no corresponding player.  don't do anything.
                     console.log("player at " + conn.id + " is invalid.");
-                    return;
+					return;
                 }
 
-                switch (message.type) {
-					// for chatting
-					case "chat":
-						console.log('Broadcast : '+message.msg + ' for ' + lobby_player.name);
-						var json_msg = {
-							'type': 'incomming_msg',
-							'msg': message.msg,
-							'name': lobby_player.name
-						};
-						GlobalChat(json_msg, lobby_player);
-						break;
-
-					case "join_lobby":
-						var player = players[conn.id];
-						var pid = players[conn.id].pid;
-						broadcastUnless({
-								type: "chat_msg",
-								id: pid,
-								msg: message.msg},
-							pid
-						);
-						break;
-
-                    case "join":
-                        var player = players[conn.id];
-                        var pid = players[conn.id].pid;
-                        // A client has requested to join.
-                        // Initialize a ship at random position
-                        unicast(conn, {
-                            type:"joined",
-                            id: pid,
-                            x: player.x,
-                            y: player.y
-                        });
-
-                        // and tell everyone.
-                        broadcastUnless({
-                            type: "new",
-                            id: pid,
-                            x: player.x,
-                            y: player.y
-                            }, pid);
-
-                        // Tell this new guy who else is in the game.
-                        for (var i in players) {
-                            if (i != conn.id) {
-                                if (players[i] !== undefined) {
-                                    unicast(sockets[pid], {
-                                        type:"new",
-                                        id: players[i].pid,
-                                        x: players[i].x,
-                                        y: players[i].y
-                                        });
-                                }
-                            }
-                        }
-                        break;
+				switch (message.type) {
 					case "playerAction":
-						players[conn.id].calculatePositionByDirection(message.direction);
-						if((!players[conn.id].beingHooked)&&(message.isThrowHook)){
-							players[conn.id].setHookTarget(message.mouse_x,message.mouse_y);
+						room_players[conn.id].calculatePositionByDirection(message.direction);
+						if((!room_players[conn.id].beingHooked)&&(message.isThrowHook)){
+							room_players[conn.id].setHookTarget(message.mouse_x,message.mouse_y);
 						}
 						break;
 					case "delay" :
-						players[conn.id].delay = message.delay;
+						room_players[conn.id].delay = message.delay;
 						break;
                     default:
                         console.log("Unhandled " + message.type);
@@ -269,7 +282,7 @@ function CHServer(sock) {
 			playerList.forEach(function(p){
 				nameList.push(p.name);
 			});
-			BroadcastAll({
+			BroadcastAllInLobby({
 				type: 'update_player_list',
 				list: nameList
 			}, null)
@@ -285,34 +298,34 @@ function CHServer(sock) {
      * Called when a new connection is detected.
      * Create and init the new player.
      */
-    var newPlayer = function (conn) {
+    var newPlayerInRoom = function (conn, player) {
         nextPID ++;
-        // Create player object and insert into players with key = conn.id
+        // Create player object and insert into room_players with key = conn.id
 		var team = nextPID%2;
 		if(team ==1){
-			players[conn.id] = new Player(100,100*nextPID,conn.id,conn);
+			player.x = 100;
+			player.y = 100*nextPID;
+			player.pid = conn.id;
+			room_players[conn.id] = player;
 		}
 		else{
-			players[conn.id] = new Player(700,100*(nextPID-1),conn.id,conn);
+			player.x = 700;
+			player.y = 100*(nextPID-1);
+			player.pid = conn.id;
+			room_players[conn.id] = player;
 		}
-        //players[conn.id] = new Player(100, 100, conn.id, conn);
-        players[conn.id].pid = nextPID;
-		players[conn.id].teamID = nextPID%2;
+        //room_players[conn.id] = new Player(100, 100, conn.id, conn);
+        room_players[conn.id].pid = nextPID;
+		room_players[conn.id].teamID = nextPID%2;
         sockets[nextPID] = conn;
         console.log('New player ' + conn.id + ' added.\n');
     };
-
-	/**
-	 * New joined player in lobby
-	 */
-	var newPlayerForLobby = function(conn) {
-	};
 
     /*
      * private method: broadcast(msg)
      *
      * broadcast takes in a JSON structure and send it to
-     * all players.
+     * all room_players.
      *
      * e.g., broadcast({type: "abc", x: 30});
      */
@@ -327,7 +340,7 @@ function CHServer(sock) {
      * private method: broadcastUnless(msg, id)
      *
      * broadcast takes in a JSON structure and send it to
-     * all players, except player id
+     * all room_players, except player id
      *
      * e.g., broadcast({type: "abc", x: 30}, pid);
      */
@@ -391,12 +404,23 @@ function CHServer(sock) {
 		});
 	}
 
+	// Global Broadcast Function
+	function BroadcastAllInLobby(message, except)
+	{
+		playerList.forEach(function(p){
+			if (p != except && !p.inRoom)
+			{
+				p.socket.write(JSON.stringify(message));
+			}
+		});
+	}
+
 	function GlobalChat(message, except)
 	{
-		if (except.room == null) // Only players in Global lobby can send message
+		if (except.room == null) // Only room_players in Global lobby can send message
 		{
 			playerList.forEach(function(p){
-				if (p != except && p.room == null) // Only players in Global lobby can receive the message
+				if (p != except && p.room == null) // Only room_players in Global lobby can receive the message
 				{
 					p.socket.write(JSON.stringify(message));
 				}

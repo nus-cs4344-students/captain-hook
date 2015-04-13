@@ -64,6 +64,16 @@ function LobbyClient() {
         }
     };
 
+    this.sendJoinRoomMsg = function(room_id) {
+        sendToServer({
+            type: 'join_room',
+            room_name: room_id
+        });
+        console.log(room_id);
+        var link = 'http://' + Config.SERVER_NAME + '/' + room_id;
+        window.location.replace(link);
+    };
+
     this.sendChatMessage = function() {
         var text = document.getElementById('message_input').value;
         sendToServer({
