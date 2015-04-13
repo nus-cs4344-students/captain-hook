@@ -112,7 +112,6 @@ function Captain(game,xPos,yPos,sid,tid){
 
 Captain.prototype.update = function(x, y, hp, hook_x, hook_y,beingHooked,hookReturn,killHook,isShoot,respawn,timestamp,playerDelay) {
 	this.game.world.bringToTop(this.sprite);
-
 	this.sprite.x = x;
 	this.sprite.y = y;
 	this.hp = hp;

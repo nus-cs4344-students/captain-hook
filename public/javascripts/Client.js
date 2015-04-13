@@ -1,7 +1,7 @@
 
 function Client() {
     var sock;           // socket to server
-    var captains = [];  // Array of captains currently in game
+    var captains = {};  // Array of captains currently in game
     var hooks = [];     // Array of hooks
     var myCaptain;
     var myHook;
@@ -14,6 +14,7 @@ function Client() {
 	var myTeamScore = 0;
 	var opponentTeamScore = 0;
 	var delay=0;
+	var calculatedDelay = 0;
 	var gameInfor = "";
     //var that = this;
 
@@ -192,6 +193,7 @@ function Client() {
 					killHook = message.killHook;
 					respawn = message.respawn;
 					timestamp = message.timestamp;
+					playerDelay = message.playerDelay;
                     var direction = checkDirection(captains[playerId].sprite.x, captains[playerId].sprite.y, playerNewPos_x, playerNewPos_y);
                     switch (direction) {
                         case "up" :
@@ -214,7 +216,10 @@ function Client() {
                             //}
                             break;
                     }
-                    captains[playerId].update(playerNewPos_x, playerNewPos_y, playerHp, hookNewPos_x, hookNewPos_y,beingHooked,hookReturn,killHook,isShoot,respawn,timestamp);
+					//setTimeout(captains[playerId].update,calculatedDelay,playerNewPos_x, playerNewPos_y, playerHp, hookNewPos_x, hookNewPos_y,beingHooked,hookReturn,killHook,isShoot,respawn,timestamp,playerDelay);
+					//setTimeout(function(){
+					captains[playerId].update(playerNewPos_x, playerNewPos_y, playerHp, hookNewPos_x, hookNewPos_y,beingHooked,hookReturn,killHook,isShoot,respawn,timestamp,playerDelay);
+					//},calculatedDelay);
 					
 
                     if(myCaptain.playerID==message.id){
@@ -266,12 +271,15 @@ function Client() {
         } 
 		
         if (isKeyDown || isThrowHook) {
-            sendToServer({type:"playerAction",
-                            id: myCaptain.playerID,
-                            direction: cursorDirection,
-                            isThrowHook: isThrowHook,
-                            mouse_x: game.input.x,
-                            mouse_y: game.input.y});
+			var states = {
+				type:"playerAction",
+				id: myCaptain.playerID,
+				direction: cursorDirection,
+				isThrowHook: isThrowHook,
+				mouse_x: game.input.x,
+				mouse_y: game.input.y
+			};
+            setTimeout(sendToServer,delay,states);
         }    
 		
 		if (wKey.isDown){
@@ -307,13 +315,13 @@ function Client() {
 		else{
 			myTeam = "red";
 		}
-		gameInfo.setText(" player ID: "+myCaptain.playerID+" team Color: "+myTeam+" HP: "+myCaptain.hp+"\n"+" my team score: "+ myTeamScore+"\n"+" opponent team score: "+opponentTeamScore);
+		gameInfo.setText(" player ID: "+myCaptain.playerID+" team Color: "+myTeam+" HP: "+myCaptain.hp+"\n"+" my team score: "+ myTeamScore+"\n"+" opponent team score: "+opponentTeamScore+"\n"+" delay: "+delay+"\n"+"updating delay: "+calculatedDelay+" ms");
 		//game.debug.text(" player ID: "+myCaptain.playerID+" team Color: "+myTeam+" HP: "+myCaptain.hp,232,32);
 		//game.debug.text(" my team score: "+ myTeamScore,302,54);
 		//game.debug.text(" opponent team score: "+opponentTeamScore,302,76);
         //game.debug.text(" x:" + myCaptain.sprite.body.x + "   y:" + myCaptain.sprite.body.y + " player ID:" + myCaptain.playerID + " total other players:" + captains.length+ " HP:" + myCaptain.hp+" team ID: "+myCaptain.teamID, 32, 32);
 		//game.debug.text(" isShoot: "+ myCaptain.isShooting + " killHook: " + myCaptain.killHook + " hookReturn: "+myCaptain.hookReturn + " beingHooked: "+myCaptain.beingHooked + " respawn: "+myCaptain.respawn,32,54);
-		//game.debug.text("last time update for my character: "+myCaptain.lastUpdate+ " delay: "+delay+" ms",32,76);
+		//game.debug.text("last time update for my character: "+myCaptain.lastUpdate+ " delay: "+delay+" ms",32,150);
         //game.debug.spriteInfo(sprite, 32, 450);
     }
 
