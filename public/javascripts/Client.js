@@ -24,6 +24,7 @@ function Client() {
         game.load.spritesheet('captain1', '../assets/captain1SpriteSheet.png', 32, 32);
         game.load.spritesheet('captain2', '../assets/captain2SpriteSheet.png', 32, 32);
         game.load.image('star', '../assets/star.png');
+        game.load.image('tailBit', '../assets/hookTail.png')
     }
 
     var map;

@@ -18,12 +18,17 @@ function Captain(game,xPos,yPos,sid){
 
 	this.sprite.animations.add('left', [12, 13, 14], 10, true);
 	this.sprite.animations.add('right', [24, 25, 26], 10, true);
+	this.sprite.animations.add('attack', [24, 25, 26], 10, true);
+
+	this.tailBits = [];
+	this.numberOfTailBits = 0;
 
 	//this.sprite.frame = 13;
 
 	game.world.bringToTop(this.sprite);
 
 	//Constructor
+	this.game = game;
 	this.initialX = xPos;
 	this.initialY = yPos;
 	this.xVelocity = 0;
@@ -44,17 +49,18 @@ function Captain(game,xPos,yPos,sid){
 	this.respawn = false;
 	this.lastUpdate = 0;
 	this.delay = 0;
+	this.speedOfHook = 500;
 	
 	this.hud = Phaser.Plugin.HUDManager.create(game, this, 'captainHUD');
   	this.healthHUD = this.hud.addBar(0,-20, 32, 2, 100, 'hp', this, Phaser.Plugin.HUDManager.HEALTHBAR, false);
   	this.healthHUD.bar.anchor.setTo(0.5, 0.5);
 
 	var style = { font: "10px Arial", fill: "#ff0044", align: "center" };
-	this.nameLabel = game.add.text(0, -24, this.playerID, style);
-	this.nameLabel.anchor.set(0.5);
-	this.sprite.addChild(this.healthHUD.bar);
-	this.sprite.addChild(this.nameLabel);
-
+  	this.nameLabel = game.add.text(0, -24, this.playerID, style);
+    this.nameLabel.anchor.set(0.5);
+  	this.sprite.addChild(this.healthHUD.bar);
+  	this.sprite.addChild(this.nameLabel);
+	
 	this.isDead = function(){
 		if(this.hp<=0){
 			return true;
@@ -68,6 +74,17 @@ function Captain(game,xPos,yPos,sid){
 		game.physics.enable(this.hook,Phaser.Physics.ARCADE);
 		this.hook.body.collideWorldBounds = false;
 		this.isShooting = true;
+	}
+
+	this.addTailBit = function() {
+		this.tailBits[this.numberOfTailBits] = game.add.sprite(this.sprite.x+10,this.sprite.y+10,'tailBit');
+		game.physics.enable(this.tailBits[this.numberOfTailBits],Phaser.Physics.ARCADE);
+		if (this.numberOfTailBits == 0) {
+			this.game.physics.arcade.moveToObject(this.tailBits[this.numberOfTailBits], this.hook, this.speedOfHook);
+		} else {
+			this.game.physics.arcade.moveToObject(this.tailBits[this.numberOfTailBits], this.tailBits[this.numberOfTailBits-1], this.speedOfHook);
+		}
+		this.numberOfTailBits++;
 	}
 	
 	this.disableCollision = function(){
@@ -94,6 +111,8 @@ function Captain(game,xPos,yPos,sid){
 
 
 Captain.prototype.update = function(x, y, hp, hook_x, hook_y,beingHooked,hookReturn,killHook,isShoot,respawn,timestamp,playerDelay) {
+	this.game.world.bringToTop(this.sprite);
+
 	this.sprite.x = x;
 	this.sprite.y = y;
 	this.hp = hp;
@@ -118,11 +137,43 @@ Captain.prototype.update = function(x, y, hp, hook_x, hook_y,beingHooked,hookRet
 	if ((killHook)&&(this.isHookCreated)){
 		this.hook.kill();
 		this.isHookCreated = false;
+
+		for (var i = 0; i < this.tailBits.length; i++) {
+			this.tailBits[i].kill();
+		}
+		this.numberOfTailBits = 0;
 	}
 	if (respawn){
 		this.sprite.x = this.initialX;
 		this.sprite.y = this.initialY;
 		this.hp = 100;
 		this.respawn = false;
+	}
+
+	// Creates tail of hook
+	if (this.isHookCreated) {
+		if (this.numberOfTailBits == 0) {
+			if (this.game.physics.arcade.distanceBetween(this.hook, this.sprite) > 16) {
+				this.addTailBit();
+			}
+		} else {
+			if (this.game.physics.arcade.distanceBetween(this.tailBits[this.numberOfTailBits-1], this.sprite) > 16) {
+				this.addTailBit();
+			}
+		}
+
+		if (!hookReturn) {
+			for (var i = 0; i < this.numberOfTailBits; i++) {
+				this.game.physics.arcade.moveToObject(this.tailBits[i], this.hook, this.speedOfHook);
+			}
+		} else {
+			for (var i = 0; i < this.numberOfTailBits; i++) {
+				this.game.physics.arcade.moveToObject(this.tailBits[i], this.sprite, this.speedOfHook);
+
+				if (this.game.physics.arcade.distanceBetween(this.tailBits[i], this.sprite) < 9) {
+					this.tailBits[i].kill();
+				}
+			}
+		}
 	}
 }
