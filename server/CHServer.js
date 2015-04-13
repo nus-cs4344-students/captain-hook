@@ -12,9 +12,15 @@ function CHServer(sock) {
     var socket = sock;
     var sockets = {}; // Associative array for sockets, indexed via player ID
     var players = {}; // Associative array for players, indexed via socket ID
+	var availableID = [1,2,3,4,5,6];
 	var team1Score = 0;
 	var team0Score = 0;
-
+	/*
+	availableID.push(1);
+	avaliableID.push(2);
+	avaliableID.push(3);
+	avaliableID.push(4);
+	*/
     var gameLoop = function() {
 		//update game states for each player
 		var p1;
@@ -142,7 +148,7 @@ function CHServer(sock) {
     this.start = function() {
         // Connection established from a client socket
         socket.on("connection", function(conn) {
-			if(nextPID==6){
+			if(availableID.length==0){
 				unicast(conn,{type:"message",content:"The game is full. Come back later"});
 			}
 			else{
@@ -152,6 +158,8 @@ function CHServer(sock) {
 				// tell other clients the client left
 				conn.on('close', function () {
 					var pid = players[conn.id].pid;
+					availableID.push(pid);
+					availableID.sort();
 					delete players[conn.id];
 					broadcastUnless({
 						type: "delete",
@@ -232,8 +240,8 @@ function CHServer(sock) {
      * Create and init the new player.
      */
     var newPlayer = function (conn) {
-        nextPID ++;
-		
+		//nextPID++;
+		nextPID = availableID.shift();
 		// Create player object and insert into players with key = conn.id
 		var team = nextPID%2;
 		if(team ==1){

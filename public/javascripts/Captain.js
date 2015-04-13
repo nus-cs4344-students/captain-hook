@@ -18,6 +18,8 @@ function Captain(game,xPos,yPos,sid){
 
 	this.sprite.animations.add('left', [12, 13, 14], 10, true);
 	this.sprite.animations.add('right', [24, 25, 26], 10, true);
+	this.sprite.animations.add('attack', [24, 25, 26], 10, true);
+
 	this.tailBits = [];
 	this.numberOfTailBits = 0;
 
@@ -47,6 +49,7 @@ function Captain(game,xPos,yPos,sid){
 	this.respawn = false;
 	this.lastUpdate = 0;
 	this.delay = 0;
+	this.speedOfHook = 500;
 	
 	this.hud = Phaser.Plugin.HUDManager.create(game, this, 'captainHUD');
   	this.healthHUD = this.hud.addBar(0,-20, 32, 2, 100, 'hp', this, Phaser.Plugin.HUDManager.HEALTHBAR, false);
@@ -73,14 +76,13 @@ function Captain(game,xPos,yPos,sid){
 		this.isShooting = true;
 	}
 
-	this.createTail = function() {
+	this.addTailBit = function() {
 		this.tailBits[this.numberOfTailBits] = game.add.sprite(this.sprite.x+10,this.sprite.y+10,'tailBit');
 		game.physics.enable(this.tailBits[this.numberOfTailBits],Phaser.Physics.ARCADE);
-		var speed = 500;
 		if (this.numberOfTailBits == 0) {
-			this.game.physics.arcade.moveToObject(this.tailBits[this.numberOfTailBits], this.hook, speed);
+			this.game.physics.arcade.moveToObject(this.tailBits[this.numberOfTailBits], this.hook, this.speedOfHook);
 		} else {
-			this.game.physics.arcade.moveToObject(this.tailBits[this.numberOfTailBits], this.tailBits[this.numberOfTailBits-1], speed);
+			this.game.physics.arcade.moveToObject(this.tailBits[this.numberOfTailBits], this.tailBits[this.numberOfTailBits-1], this.speedOfHook);
 		}
 		this.numberOfTailBits++;
 	}
@@ -148,34 +150,26 @@ Captain.prototype.update = function(x, y, hp, hook_x, hook_y,beingHooked,hookRet
 		this.respawn = false;
 	}
 
-	//console.log(hookReturn)
+	// Creates tail of hook
 	if (this.isHookCreated) {
 		if (this.numberOfTailBits == 0) {
-			if (this.game.physics.arcade.distanceBetween(this.hook, this.sprite) > 13) {
-				this.createTail();
-
+			if (this.game.physics.arcade.distanceBetween(this.hook, this.sprite) > 16) {
+				this.addTailBit();
 			}
 		} else {
-			if (this.game.physics.arcade.distanceBetween(this.tailBits[this.numberOfTailBits-1], this.sprite) > 11) {
-				this.createTail();
+			if (this.game.physics.arcade.distanceBetween(this.tailBits[this.numberOfTailBits-1], this.sprite) > 16) {
+				this.addTailBit();
 			}
 		}
+
 		if (!hookReturn) {
-			var speed = 500;
-			var arrayLength = this.tailBits.length;
-			for (var i = 0; i < arrayLength; i++) {
-				if (i == 0) {
-					this.game.physics.arcade.moveToObject(this.tailBits[i], this.hook, speed);
-				} else {
-					this.game.physics.arcade.moveToObject(this.tailBits[i], this.tailBits[i-1], speed);
-				}
+			for (var i = 0; i < this.numberOfTailBits; i++) {
+				this.game.physics.arcade.moveToObject(this.tailBits[i], this.hook, this.speedOfHook);
 			}
 		} else {
-			var speed = 500;
+			for (var i = 0; i < this.numberOfTailBits; i++) {
+				this.game.physics.arcade.moveToObject(this.tailBits[i], this.sprite, this.speedOfHook);
 
-			var arrayLength = this.tailBits.length;
-			for (var i = 0; i < arrayLength; i++) {
-				this.game.physics.arcade.moveToObject(this.tailBits[i], this.sprite, speed);
 				if (this.game.physics.arcade.distanceBetween(this.tailBits[i], this.sprite) < 9) {
 					this.tailBits[i].kill();
 				}

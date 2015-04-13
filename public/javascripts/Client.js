@@ -14,6 +14,7 @@ function Client() {
 	var myTeamScore = 0;
 	var opponentTeamScore = 0;
 	var delay=0;
+	var gameInfor = "";
     //var that = this;
 
     var game = new Phaser.Game(800, 608, Phaser.CANVAS, 'captain-hook', { preload: preload, create: create, update: update, render: render });
@@ -50,11 +51,16 @@ function Client() {
         cursors = game.input.keyboard.createCursorKeys();
 		wKey = game.input.keyboard.addKey(Phaser.Keyboard.W);
 		sKey = game.input.keyboard.addKey(Phaser.Keyboard.S);
-
+		var style = { font: "20px Arial", fill: "#ff0044", align: "center" };
+		gameInfo = game.add.text(230, 20, "", style);
+		///*
+		if((window.DeviceMotionEvent)||('listenForDeviceMovement' in window)){
+			window.addEventListener("devicemotion", onDeviceMotion,false);
+		}
+		//*/
     }
-	/*
-	window.addEventListener("devicemotion", onDeviceMotion,true);
-	function onDeviceMotion = function(e){
+	///*
+	function onDeviceMotion (e){
 		var x = e.accelerationIncludingGravity.x;
 		var y = e.accelerationIncludingGravity.y;
 		//var z = e.accelerationIncludingGravity.z;
@@ -67,11 +73,11 @@ function Client() {
 
         var cursorDirection = "";
 		if(max==Math.abs(x)){
-			if(x<0){
+			if(x>0){
 				cursorDirection = "left";
 				myCaptain.sprite.animations.play('left');
 			}
-			else if(x>0){
+			else if(x<0){
 				cursorDirection = "right";
 				myCaptain.sprite.animations.play('right');
 			}
@@ -85,7 +91,7 @@ function Client() {
 				cursorDirection = "up";
 				myCaptain.sprite.animations.play('up');
 			}
-			else(y>0){
+			else if(y>0){
 				cursorDirection = "down";
 				myCaptain.sprite.animations.play('down');
 			}
@@ -104,8 +110,7 @@ function Client() {
                             mouse_y: game.input.y});
         } 
 	}
-	*/
-
+	//*/
 
     /*
      * private method: sendToServer(msg)
@@ -158,7 +163,7 @@ function Client() {
                     break;
 					
 				case "message":
-					console.log(message.content);
+					alert(message.content);
 					break;
 
                 case "delete":
@@ -310,14 +315,15 @@ function Client() {
         if (!ready) return;
 		var myTeam = "";
 		if(myCaptain.teamID==1){
-			myTeam = "bule";
+			myTeam = "blue";
 		}
 		else{
 			myTeam = "red";
 		}
-		game.debug.text(" player ID: "+myCaptain.playerID+" team Color: "+myTeam+" HP: "+myCaptain.hp,232,32);
-		game.debug.text(" my team score: "+ myTeamScore,302,54);
-		game.debug.text(" opponent team score: "+opponentTeamScore,302,76);
+		gameInfo.setText(" player ID: "+myCaptain.playerID+" team Color: "+myTeam+" HP: "+myCaptain.hp+"\n"+" my team score: "+ myTeamScore+"\n"+" opponent team score: "+opponentTeamScore);
+		//game.debug.text(" player ID: "+myCaptain.playerID+" team Color: "+myTeam+" HP: "+myCaptain.hp,232,32);
+		//game.debug.text(" my team score: "+ myTeamScore,302,54);
+		//game.debug.text(" opponent team score: "+opponentTeamScore,302,76);
         //game.debug.text(" x:" + myCaptain.sprite.body.x + "   y:" + myCaptain.sprite.body.y + " player ID:" + myCaptain.playerID + " total other players:" + captains.length+ " HP:" + myCaptain.hp+" team ID: "+myCaptain.teamID, 32, 32);
 		//game.debug.text(" isShoot: "+ myCaptain.isShooting + " killHook: " + myCaptain.killHook + " hookReturn: "+myCaptain.hookReturn + " beingHooked: "+myCaptain.beingHooked + " respawn: "+myCaptain.respawn,32,54);
 		//game.debug.text("last time update for my character: "+myCaptain.lastUpdate+ " delay: "+delay+" ms",32,76);
