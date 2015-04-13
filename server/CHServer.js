@@ -63,6 +63,13 @@ function CHServer(sock) {
 			}
 		}
 		
+		for(var i in players){
+			p = players[i];
+			if(p.isFallInRiver()){
+				p.hp -= 0.2;
+			}
+		}
+		
 		//respawn if any player's hp reach 0
 		for(var i in players){
 			var p = players[i];
@@ -121,16 +128,13 @@ function CHServer(sock) {
 				teamID: p.teamID,
 				playerTeamScore:playerTeamScore,
 				opponentTeamScore:opponentTeamScore,
-				playerDelay:p.delay,
 				timestamp:currentTime
 			};
 			for(var j in players){
 				var delay = players[j].getDelay();
 				var pid = players[j].pid;
 				//console.log("player("+pid+")'s delay: "+delay);
-				setTimeout(function(){
-					unicast(sockets[pid],states);
-				},delay);
+				setTimeout(unicast(sockets[pid],states),delay);
 			}
 		}
     };
@@ -138,78 +142,83 @@ function CHServer(sock) {
     this.start = function() {
         // Connection established from a client socket
         socket.on("connection", function(conn) {
-            newPlayer(conn);
+			if(nextPID==6){
+				unicast(conn,{type:"message",content:"The game is full. Come back later"});
+			}
+			else{
+				newPlayer(conn);
 
-            // When the client closes the connection to the
-            // tell other clients the client left
-            conn.on('close', function () {
-                var pid = players[conn.id].pid;
-                delete players[conn.id];
-                broadcastUnless({
-                    type: "delete",
-                    id: pid}, pid)
-            });
+				// When the client closes the connection to the
+				// tell other clients the client left
+				conn.on('close', function () {
+					var pid = players[conn.id].pid;
+					delete players[conn.id];
+					broadcastUnless({
+						type: "delete",
+						id: pid}, pid)
+				});
 
-            // When the client send something to the server.
-            conn.on('data', function (data) {
-                var message = JSON.parse(data);
-                var p = players[conn.id];
-                if (p === undefined) {
-                    // we received data from a connection with
-                    // no corresponding player.  don't do anything.
-                    console.log("player at " + conn.id + " is invalid.");
-                    return;
-                }
+				// When the client send something to the server.
+				conn.on('data', function (data) {
+					var message = JSON.parse(data);
+					var p = players[conn.id];
+					if (p === undefined) {
+						// we received data from a connection with
+						// no corresponding player.  don't do anything.
+						//console.log("player at " + conn.id + " is invalid.");
+						return;
+					}
 
-                switch (message.type) {
-                    case "join":
-                        var player = players[conn.id];
-                        var pid = players[conn.id].pid;
-                        // A client has requested to join.
-                        // Initialize a ship at random position
-                        unicast(conn, {
-                            type:"joined",
-                            id: pid,
-                            x: player.x,
-                            y: player.y
-                        });
+					switch (message.type) {
+						case "join":
+							var player = players[conn.id];
+							var pid = players[conn.id].pid;
+							// A client has requested to join.
+							// Initialize a ship at random position
+							unicast(conn, {
+								type:"joined",
+								id: pid,
+								x: player.x,
+								y: player.y
+							});
 
-                        // and tell everyone.
-                        broadcastUnless({
-                            type: "new",
-                            id: pid,
-                            x: player.x,
-                            y: player.y
-                            }, pid);
+							// and tell everyone.
+							broadcastUnless({
+								type: "new",
+								id: pid,
+								x: player.x,
+								y: player.y
+								}, pid);
 
-                        // Tell this new guy who else is in the game.
-                        for (var i in players) {
-                            if (i != conn.id) {
-                                if (players[i] !== undefined) {
-                                    unicast(sockets[pid], {
-                                        type:"new",
-                                        id: players[i].pid,
-                                        x: players[i].x,
-                                        y: players[i].y
-                                        });
-                                }
-                            }
-                        }
-                        break;
-					case "playerAction":
-						players[conn.id].calculatePositionByDirection(message.direction);
-						if((!players[conn.id].beingHooked)&&(message.isThrowHook)){
-							players[conn.id].setHookTarget(message.mouse_x,message.mouse_y);
-						}
-						//gameLoop();
-						break;
-					case "delay" :
-						players[conn.id].delay = message.delay;
-						break;
-                    default:
-                        console.log("Unhandled " + message.type);
-                }
-            });
+							// Tell this new guy who else is in the game.
+							for (var i in players) {
+								if (i != conn.id) {
+									if (players[i] !== undefined) {
+										unicast(sockets[pid], {
+											type:"new",
+											id: players[i].pid,
+											x: players[i].x,
+											y: players[i].y
+											});
+									}
+								}
+							}
+							break;
+						case "playerAction":
+							players[conn.id].calculatePositionByDirection(message.direction);
+							if((!players[conn.id].beingHooked)&&(message.isThrowHook)){
+								players[conn.id].setHookTarget(message.mouse_x,message.mouse_y);
+							}
+							break;
+						case "delay" :
+							players[conn.id].delay = message.delay;
+							break;
+						default:
+							//console.log("Unhandled " + message.type);
+					}
+				});
+			}
+
         });
 
         // cal the game loop
@@ -224,7 +233,8 @@ function CHServer(sock) {
      */
     var newPlayer = function (conn) {
         nextPID ++;
-        // Create player object and insert into players with key = conn.id
+		
+		// Create player object and insert into players with key = conn.id
 		var team = nextPID%2;
 		if(team ==1){
 			players[conn.id] = new Player(100,100*nextPID,conn.id,conn);
@@ -232,11 +242,11 @@ function CHServer(sock) {
 		else{
 			players[conn.id] = new Player(700,100*(nextPID-1),conn.id,conn);
 		}
-        //players[conn.id] = new Player(100, 100, conn.id, conn);
-        players[conn.id].pid = nextPID;
+		//players[conn.id] = new Player(100, 100, conn.id, conn);
+		players[conn.id].pid = nextPID;
 		players[conn.id].teamID = nextPID%2;
-        sockets[nextPID] = conn;
-        console.log('New player ' + conn.id + ' added.\n');
+		sockets[nextPID] = conn;
+		//console.log('New player ' + conn.id + ' added.\n');
     };
 
     /*

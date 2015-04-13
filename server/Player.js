@@ -257,6 +257,19 @@ function Player(_x, _y, _pid, _socket)
 		}
 	};
 	
+	this.isFallInRiver = function(){
+		if(!this.beingHooked){
+			if((this.x>270)&&(this.x<530)){
+				return true;
+			}
+			else{
+				return false;
+			}
+		}
+		else{
+			return false;
+		}
+	};
 
 
 //--------------------------------------------

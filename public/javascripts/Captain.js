@@ -51,7 +51,12 @@ function Captain(game,xPos,yPos,sid){
 	this.hud = Phaser.Plugin.HUDManager.create(game, this, 'captainHUD');
   	this.healthHUD = this.hud.addBar(0,-20, 32, 2, 100, 'hp', this, Phaser.Plugin.HUDManager.HEALTHBAR, false);
   	this.healthHUD.bar.anchor.setTo(0.5, 0.5);
+
+	var style = { font: "10px Arial", fill: "#ff0044", align: "center" };
+  	this.nameLabel = game.add.text(0, -24, this.playerID, style);
+    this.nameLabel.anchor.set(0.5);
   	this.sprite.addChild(this.healthHUD.bar);
+  	this.sprite.addChild(this.nameLabel);
 	
 	this.isDead = function(){
 		if(this.hp<=0){
@@ -102,9 +107,7 @@ function Captain(game,xPos,yPos,sid){
 	}
 }
 
-Captain.prototype.getLastUpdate = function(){
-	return this.lastUpdate;
-}
+
 Captain.prototype.update = function(x, y, hp, hook_x, hook_y,beingHooked,hookReturn,killHook,isShoot,respawn,timestamp,playerDelay) {
 	this.game.world.bringToTop(this.sprite);
 
@@ -176,9 +179,7 @@ Captain.prototype.update = function(x, y, hp, hook_x, hook_y,beingHooked,hookRet
 				if (this.game.physics.arcade.distanceBetween(this.tailBits[i], this.sprite) < 9) {
 					this.tailBits[i].kill();
 				}
-
 			}
-
 		}
 	}
 }

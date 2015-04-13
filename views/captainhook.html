@@ -9,21 +9,13 @@
   <!-- Site Properities -->
   <title>Captain Hook</title>
 
-  <link rel="stylesheet" type="text/css" href="./dist/semantic.css">
-  <link rel="stylesheet" type="text/css" href="captainhook.css">
+  <link rel="stylesheet" type="text/css" href="../public/dist/semantic.css">
+  <link rel="stylesheet" type="text/css" href="../public/stylesheets/captainhook.css">
   <script src="http://cdnjs.cloudflare.com/ajax/libs/jquery/2.0.3/jquery.js"></script>
 
   <!-- Used with Tab History !-->
   <script src="http://cdnjs.cloudflare.com/ajax/libs/jquery.address/1.6/jquery.address.min.js"></script>
-  <script src="./dist/semantic.js"></script>
-  <script>
-    function appendText() {
-    x=document.getElementById('chatmsg');
-    y=document.getElementById('sendmsg');
-    x.innerHTML=x.innerHTML+y.value+"<br />";
-    document.getElementById("sendmsg").reset();
-    }//end of appendText()
-  </script>
+  <script src="../public/dist/semantic.js"></script>
 </head>
 
 <body id="cpthook">
@@ -48,7 +40,7 @@
       </div>
 
       <div id = "groupchat" class="column"><br>
-        <div id = "chatmsg" class="column ui segment" style="min-height: 35rem;">
+        <div class="column ui segment" style="min-height: 35rem;">
           <div class="ui top attached label"><h3 class="ui header">Group Chat!</h3></div><br>
           Type something!
         </div>
@@ -56,10 +48,10 @@
           <div class="required field">
             <label>Message:</label>
             <div class="ui icon input">
-              <input type="text" name id="sendmsg" placeholder="Type Message Here:">
+              <input type="text" placeholder="Type Message Here:">
               <i class="mail outline icon"></i>
             </div>
-          </div><div class="ui submit button" onclick="appendText()">Submit</div>
+          </div><div class="ui submit button">Submit</div>
         </form>
       </div>
 
