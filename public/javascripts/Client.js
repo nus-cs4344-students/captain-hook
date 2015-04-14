@@ -11,6 +11,10 @@ function Client() {
 	var opponentTeamScore = 0;
 	var delay=0;
 	var calculatedDelay = 0;
+    var roomJoined = undefined;
+
+    var player_size = 0;
+    var room_size = 0;
 
     var game = new Phaser.Game(800, 608, Phaser.CANVAS, 'captain-hook', { preload: preload, create: create, update: update, render: render });
 
@@ -138,12 +142,137 @@ function Client() {
             var message = JSON.parse(e.data);
 
             switch (message.type) {
+                /**
+                 * For chat service
+                 */
+                case "new_lobby_player":
+                    var text = message.name + ' joined!';
+
+                    var item = document.createElement('div');
+                    item.className = 'ui yellow message';
+                    item.textContent = text;
+
+                    var box = document.getElementById('chatarea');
+                    box.appendChild(item);
+                    box.scrollTop = box.scrollHeight;
+
+                    break;
+
+                case 'given_name':
+                    var text = 'Your name is ' + message.name;
+
+                    var item = document.createElement('div');
+                    item.className = 'ui pink message';
+                    item.textContent = text;
+
+                    var box = document.getElementById('chatarea');
+                    box.appendChild(item);
+                    box.scrollTop = box.scrollHeight;
+
+                    break;
+
+                case 'player_disconnection':
+                    var text = message.name + ' disconnected!';
+
+                    var item = document.createElement('div');
+                    item.className = 'ui red message';
+                    item.textContent = text;
+
+                    var box = document.getElementById('chatarea');
+                    box.appendChild(item);
+                    box.scrollTop = box.scrollHeight;
+                    break;
+
+                case "incomming_msg":
+                    var text = message.name + ' says > ' + message.msg;
+
+                    var item = document.createElement('div');
+                    item.setAttribute('align', 'left');
+                    item.textContent = text;
+
+                    var box = document.getElementById('chatarea');
+                    box.appendChild(item);
+                    box.scrollTop = box.scrollHeight;
+                    break;
+
+                case "created_room":
+                    sendJoinRoomMsg(message.room_id);
+                    break;
+
+                case "update_player_room_list":
+                    var players = message.player_list;
+                    var ui = document.getElementById('player_list');
+
+                    if (player_size != players.length) {
+                        $(ui).empty();
+
+                        players.forEach(function (p) {
+                            var item = document.createElement('div');
+                            item.className = 'item';
+                            var image = document.createElement('img');
+                            image.className = 'ui avatar image';
+                            image.src = 'assets/daniel.jpg';
+
+                            var header_div = document.createElement('div');
+                            header_div.className = 'content';
+
+                            var header = document.createElement('div');
+                            header.className = 'header';
+                            header.textContent = p;
+
+                            header_div.appendChild(header);
+
+                            item.appendChild(image);
+                            ui.appendChild(item);
+                            ui.appendChild(header_div);
+                            console.log(p);
+                        });
+                        player_size = players.length;
+                    }
+
+                    var rooms = message.room_list;
+                    var room_ui = document.getElementById('room_list');
+
+                    if (room_size != rooms.length) {
+                        $(room_ui).empty();
+
+                        rooms.forEach(function (r) {
+                            var item = document.createElement('div');
+                            item.className = 'item';
+
+                            var button = document.createElement('div');
+                            button.className = "ui labeled icon blue button";
+                            button.id = r;
+                            button.setAttribute('onclick', 'client.joinRoom(this.id)');
+
+                            var icon = document.createElement('i');
+                            icon.className = 'game icon';
+
+                            var detail = document.createElement('div');
+                            detail.textContent = r;
+
+                            button.appendChild(icon);
+                            button.appendChild(detail);
+                            item.appendChild(button);
+
+                            var list = document.getElementById('room_list');
+                            list.appendChild(item);
+
+                        });
+                        room_size = rooms.length;
+                    }
+
+                    break;
+
+                /**
+                 * For game
+                 */
                 case "joined":
                     // Server allows THIS player to join game
                     myId = message.id;
                     myStartPos_x = message.x;
                     myStartPos_y = message.y;
-                    myCaptain = new Captain(game, myStartPos_x, myStartPos_y, myId, message.tid, message.pname);
+                    myCaptain = new Captain(game, myStartPos_x, myStartPos_y, myId, message.tid, message.pname, message.rname);
                     captains[myId] = myCaptain;
                     ready = true;
                     break;
@@ -153,7 +282,11 @@ function Client() {
                     playerId = message.id;
                     playerStartPos_x = message.x;
                     playerStartPos_y = message.y;
-                    captains[playerId] = new Captain(game, playerStartPos_x, playerStartPos_y, playerId, message.tid, message.pname);
+                    if (myCaptain.roomName == message.rname) {
+                        captains[playerId] = new Captain(game, playerStartPos_x, playerStartPos_y, playerId, message.tid, message.pname);
+                    } else {
+                        return;
+                    }
                     break;
 					
 				case "message":
@@ -221,10 +354,12 @@ function Client() {
             }
         };
 
+        /*
         sock.onopen = function() {
             // When connection to server is open, ask to join.
             sendToServer({type:"join_room", room: "game"});
         }
+        */
     };
 
     function updateMyActionsToServer() {
@@ -259,14 +394,15 @@ function Client() {
 				direction: cursorDirection,
 				isThrowHook: isThrowHook,
 				mouse_x: game.input.x,
-				mouse_y: game.input.y
+				mouse_y: game.input.y,
+                room: roomJoined
 			};
             setTimeout(sendToServer,delay,states);
         }    
 		
 		if (wKey.isDown){
 			delay += 20;
-			sendToServer({type:"delay", delay:delay});
+			sendToServer({type:"delay", delay:delay, room:roomJoined});
 		} else if (sKey.isDown) {
 			if (delay >= 20) {
 				delay -= 20;
@@ -297,6 +433,7 @@ function Client() {
 			myTeam = "red";
 		}
 
+        document.getElementById('room').textContent = myCaptain.roomName;
         document.getElementById('color').textContent = myTeam;
         document.getElementById('hp').textContent = Math.round(myCaptain.hp) + '';
         document.getElementById('my').textContent = myTeamScore + '';
@@ -318,6 +455,74 @@ function Client() {
             return "noChange";
         }
     }
+
+    this.createNewRoom = function() {
+        sendToServer({
+            type: 'create_room'
+        });
+    };
+
+    this.leaveRoom = function() {
+        var section3 = document.getElementById('section3');
+        section3.style.visibility = 'hidden';
+        sendToServer({
+            type: 'leave_room',
+            name: roomJoined
+        });
+        roomJoined = undefined;
+    };
+
+    /**
+     * For chat service
+     */
+    function sendJoinRoomMsg(room_id) {
+        var section3 = document.getElementById('section3');
+        section3.style.visibility = 'visible';
+        roomJoined = room_id;
+        sendToServer({
+            type: 'join_room',
+            room: room_id
+        });
+    }
+
+    // from doc element
+    this.joinRoom = function(room_id) {
+        var section3 = document.getElementById('section3');
+        section3.style.visibility = 'visible';
+        roomJoined = room_id;
+        sendToServer({
+            type: 'join_room',
+            room: room_id
+        });
+    };
+
+    this.searchKeyPress = function(e)
+    {
+        // look for window.event in case event isn't passed in
+        e = e || window.event;
+        if (e.keyCode == 13)
+        {
+            document.getElementById('message_send').click();
+        }
+    };
+
+    this.sendChatMessage = function() {
+        var text = document.getElementById('message_input').value;
+        sendToServer({
+            type: 'chat',
+            msg: text
+        });
+
+        var item = document.createElement('div');
+        item.setAttribute('align', 'left');
+        item.textContent = 'me > ' + text;
+
+        var box = document.getElementById('chatarea');
+        box.appendChild(item);
+        box.scrollTop = box.scrollHeight;
+
+        document.getElementById('message_input').value = '';
+    };
 }
 
 var client = new Client();

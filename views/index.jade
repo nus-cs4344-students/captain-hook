@@ -14,14 +14,19 @@ html
     script(type='text/javascript' src='javascripts/scriptLoader.js')
 
     script(type='text/javascript' src='javascripts/Config.js')
+    script(type='text/javascript' src='javascripts/Captain.js')
+    script(type='text/javascript' src='javascripts/phaser.min.js')
+    script(type='text/javascript' src='javascripts/HudManager.js')
 
-  body(id='home' onload="loadScript('', 'javascripts/LobbyClient.js')")
-    content
+  body(id='home' onload="loadScript('', 'javascripts/Client.js')")
+    content(id='section1')
         div(class='ui inverted masthead segment')
           div(class='ui page grid')
             div(class='column')
               div(class='ui inverted yellow menu')
                 div(class='header item') Captain Hook
+                div(class='right menu')
+                  a(class='item' onclick='client.createNewRoom()') Create Room
 
               div(class="ui three column center aligned stackable padded grid")
                 div(class='three column row')
@@ -49,14 +54,10 @@ html
                   div(class='teal column' style='min-height:40rem;max-height:40rem')
                     h2(class='ui centered header') Room List
                     h3(class='ui dividing header')
-                    div(class='ui list' style='overflow:auto;max-height:32rem')
+                    div(id='room_list' class='ui list' style='overflow:auto;max-height:32rem')
                       // add game room item
-                      div(cass='item')
-                        div(id='game' class="ui labeled icon blue button" onclick='client.sendJoinRoomMsg(this.id)')
-                          i(class="game icon")
-                          div(class="detail") Game Room 0
 
-    content
+    content(id='section2')
         div(class="ui vertical feature segment")
           div(class="ui centered page grid")
             div(class="fourteen wide column")
@@ -102,5 +103,40 @@ html
                     div(class='description').
                       I like CS4344.
 
+    content(id='section3' style='position:absolute;top:0;right:0;bottom:0;left:0;visibility:hidden')
+        div(class='ui inverted masthead segment')
+          div(class='ui grid')
+            div(class='right aligned three wide column')
+              h2(class='ui green dividing header')
+              div(class='right column')
+                div(class='ui gold label') Your Room
+                  div(id='room' class='detail') -
+              h2(class='ui green dividing header')
+              div(class='right column')
+                div(class='ui teal label') Your Team Color
+                  div(id='color' class='detail') -
+              h2(class='ui green dividing header')
+              div(class='right column')
+                div(class='ui red label') HP
+                  div(id='hp' class='detail') 100
+              h2(class='ui green dividing header')
+              div(class='column')
+                div(class='ui yellow label') Team Score
+                  div(id='my' class='detail') 0
+                div(class='label') |
+                div(class='ui yellow label') Opponent Team Score
+                  div(id='opponent' class='detail') 0
+              h2(class='ui green dividing header')
+              div(class='column')
+                div(class='ui white label') Delay
+                  div(id='delay' class='detail') 0ms
+                div(class='label') |
+                div(class='ui white label') Updated Delay
+                  div(id='update_delay' class='detail') 0ms
+              h2(class='ui green dividing header')
+              div(class='column')
+                div(id='leave_room' class="ui submit button" onclick='client.leaveRoom()') Leave Room
+            div(class='column')
+              div(id='captain-hook')
 
 include ./foot.jade

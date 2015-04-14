@@ -4,7 +4,6 @@ var SERVERPATH = "./";
 require(SERVERPATH + "Player.js");
 require(SERVERPATH + "Config.js");
 require(SERVERPATH + "Room.js");
-var roomScript = require(SERVERPATH + 'RoomLogic.js');
 
 function CHServer(sock) {
 
@@ -12,156 +11,15 @@ function CHServer(sock) {
     var nextPID = 0;  // PID to assign to next connected player
     var socket = sock;
     var sockets = {}; // Associative array for sockets, indexed via player ID
-    var room_players = {}; // Associative array for room_players, indexed via socket ID
 
 	// array for lobby room_players
 	var roomList = [];
 	var playerList = [];
 
-	var team1Score = 0;
-	var team0Score = 0;
-
-    var gameLoop = function() {
-		//update game states for each player
-		var p1;
-		var p2;
-		//for(var i = 0;i<room_players.length;i++){
-		for(var i in room_players){
-			p1 = room_players[i];
-			if(p1.isShoot){
-				if(p1.hookPillar){
-					p1.calculatePositionByPillar(p1.hx,p1.hy);
-				}
-				else{
-					//for(var j=0;j<room_players.length;j++){
-					for(var j in room_players){
-						p2 = room_players[j];
-						if(p1.pid!=p2.pid){
-							//if(!p2.beingHooked){
-								if(distanceBetweenTwoPoints(p1.hx,p1.hy,p2.x,p2.y)<10){
-									if(p1.teamID!=p2.teamID){
-										//console.log("player "+p1.pid+"(teamID:"+p1.teamID+") hooked player "+p2.pid+"(teamID:"+p2.teamID+")");
-										p2.hp--;//a bit different from real pudge war, being hooked will take damage.
-									}
-									p1.hookReturn = true;
-									p2.beingHooked = true;
-									p2.calculatePositionByHook(p1.x,p1.y);
-								}
-							//}
-						}
-					}
-					p1.calculateHookPosition();
-				}
-			}
-		}
-
-		//for(var i=0;i<room_players.length;i++){
-		for(var i in room_players){
-			p1 = room_players[i];
-			//for(var j=0;j<room_players.length;j++){
-			for(var j in room_players){
-				p2 = room_players[j];
-				if(distanceBetweenTwoPoints(p1.x,p1.y,p2.x,p2.y)<20){
-					if(p1.teamID!=p2.teamID){
-						p1.hp--;
-					}
-				}
-			}
-		}
-		
-		for(var i in room_players){
-			p = room_players[i];
-			if(p.isFallInRiver()){
-				p.hp -= 0.2;
-			}
-		}
-		
-		//respawn if any player's hp reach 0
-		for(var i in room_players){
-			var p = room_players[i];
-			p.respawn = false;
-			if(p.hp<1){
-				p.x = p.initialX;
-				p.y = p.initialY;
-				console.log(p.x);
-				console.log(p.y);
-				p.hp = 100;
-				p.respawn = true;
-				p.beingHooked = false;
-				p.hookReturn = false;
-				p.killHook = false;
-				p.isShoot = false;
-				p.hookPillar = false;
-				if(p.teamID==0){
-					team1Score++;
-				}
-				else{
-					team0Score++;
-				}
-			}
-		}
-		//console.log(room_players.length);
-		//for(var i=0;i<room_players.length;i++){
-		var date = new Date();
-		var currentTime = date.getTime();
-		var maxDelay = 0;
-		for(var i in room_players){
-			if(room_players[i].delay>maxDelay){
-				maxDelay = room_players[i].delay;
-			}
-		}
-		for(var i in room_players){
-			//console.log("broadcasting");
-			var p = room_players[i];
-			var playerTeamScore;
-			var opponentTeamScore;
-			if(p.teamID==1){
-				playerTeamScore=team1Score;
-				opponentTeamScore = team0Score;
-			}
-			else{
-				playerTeamScore=team0Score;
-				opponentTeamScore = team1Score;
-			}
-			if(currentTime>p.lastUpdate){
-					p.lastUpdate = currentTime;
-			}
-			var states = {
-				type:"update", 
-				id: p.pid,
-				hp: p.hp,
-				x: p.x,
-				y: p.y,
-				hx:p.hx,
-				hy:p.hy,
-				beingHooked: p.beingHooked,
-				hookReturn: p.hookReturn,
-				killHook: p.killHook,
-				isShoot: p.isShoot,
-				respawn:p.respawn,
-				teamID: p.teamID,
-				playerTeamScore:playerTeamScore,
-				opponentTeamScore:opponentTeamScore,
-				playerDelay:p.delay,
-				timestamp:currentTime
-			};
-			
-
-			for(var j in room_players){
-				var delay = room_players[j].getDelay();
-				var pid = room_players[j].pid;
-				//unicast(sockets[pid],states);
-				var calculatedDelay = delay+Math.abs(maxDelay-delay);
-				setTimeout(unicast,calculatedDelay,sockets[pid],states);
-			}
-		}
-    };
+	// for room id
+	var nextRID = 0;
 
     this.start = function() {
-		// create default room
-		var room = new Room('game', 10);
-		roomList.push(room);
-
         // Connection established from a client socket
         socket.on("connection", function(conn) {
 			// Create new player on connected
@@ -185,7 +43,7 @@ function CHServer(sock) {
             // tell other clients the client left
             conn.on('close', function () {
 				if (lobby_player.inRoom) {
-					delete room_players[conn.id];
+					delete lobby_player.room.room_players[conn.id];
 				}
 
                 broadcastUnless({
@@ -214,7 +72,6 @@ function CHServer(sock) {
             conn.on('data', function (data) {
 				var msgProcessed = false;
                 var message = JSON.parse(data);
-
                 switch (message.type) {
                     // for chatting
                     case "chat":
@@ -228,15 +85,64 @@ function CHServer(sock) {
                         GlobalChat(json_msg, lobby_player);
                         break;
 
+					case "create_room":
+						msgProcessed = true;
+						var room_name = 'room-' + nextRID;
+						// create default room
+						var room = new Room(room_name, 6, sockets);
+						roomList.push(room);
+
+						// simulate a game for this room
+						// cal the game loop
+						setInterval(function() {room.gameLoop();}, 1000/Config.FRAME_RATE);
+
+						// send successful
+						unicast(conn, {type:'created_room', room_id:room_name});
+
+						nextRID++;
+						break;
+
+					case "leave_room":
+						msgProcessed = true;
+						console.log("[!] " + lobby_player.name + " leaved room : " + message.name);
+						delete lobby_player.room.room_players[conn.id];
+
+						broadcastUnless({
+								type: "delete",
+								id: lobby_player.pid
+							},
+							null);
+						// for chat room
+
+						lobby_player.leaveRoom(); // Leave all room before disconnected
+
+						roomList = roomList.filter(function(r) {
+							return r.playerCount != 0;
+						});
+
+						break;
+
                     case "join_room":
 						msgProcessed = true;
                         var room_name = message.room;
                         console.log(lobby_player.name + " > SELECTED ROOM: " + room_name);
                         lobby_player.joinRoom(room_name, roomList);
-                        newPlayerInRoom(conn, lobby_player);
+                        newPlayerInRoom(conn, lobby_player, room_name);
 
-                        var player = room_players[conn.id];
-                        var pid = room_players[conn.id].pid;
+						var room = undefined;
+						roomList.forEach(function(r) {
+							if (r.name == room_name) {
+								room = r;
+							}
+						});
+
+						console.log('> Room try to join ...' + room.name);
+						if (room === undefined) {
+							console.log('> Room not found ...')
+						}
+
+                        var player = room.room_players[conn.id];
+                        var pid = room.room_players[conn.id].pid;
                         // A client has requested to join.
                         // Initialize a ship at random position
                         unicast(conn, {
@@ -245,7 +151,8 @@ function CHServer(sock) {
                             x: player.x,
                             y: player.y,
 							tid: player.teamID,
-							pname: player.name
+							pname: player.name,
+							rname: player.room.name
                         });
 
                         // and tell everyone.
@@ -255,20 +162,22 @@ function CHServer(sock) {
                             x: player.x,
                             y: player.y,
 							tid: player.teamID,
-							pname: player.name
+							pname: player.name,
+							rname: player.room.name
                         }, pid);
 
                         // Tell this new guy who else is in the game.
-                        for (var i in room_players) {
+                        for (var i in room.room_players) {
                             if (i != conn.id) {
-                                if (room_players[i] !== undefined) {
+                                if (room.room_players[i] !== undefined) {
                                     unicast(sockets[pid], {
                                         type:"new",
-                                        id: room_players[i].pid,
-                                        x: room_players[i].x,
-                                        y: room_players[i].y,
-										tid: room_players[i].teamID,
-										pname: room_players[i].name
+                                        id: room.room_players[i].pid,
+                                        x: room.room_players[i].x,
+                                        y: room.room_players[i].y,
+										tid: room.room_players[i].teamID,
+										pname: room.room_players[i].name,
+										rname: player.room.name
                                     });
                                 }
                             }
@@ -280,23 +189,28 @@ function CHServer(sock) {
 					return;
 				}
 
-                var p = room_players[conn.id];
-                if (p === undefined) {
-                    // we received data from a connection with
-                    // no corresponding player.  don't do anything.
-                    // console.log("player at " + conn.id + " is invalid.");
+				var room = undefined;
+				roomList.forEach(function(r) {
+					if (r.name == message.room) {
+						room = r;
+					}
+				});
+
+				var p = room.room_players[conn.id];
+
+				if (p == undefined) {
 					return;
-                }
+				}
 
 				switch (message.type) {
 					case "playerAction":
-						room_players[conn.id].calculatePositionByDirection(message.direction);
-						if((!room_players[conn.id].beingHooked)&&(message.isThrowHook)){
-							room_players[conn.id].setHookTarget(message.mouse_x,message.mouse_y);
+						room.room_players[conn.id].calculatePositionByDirection(message.direction);
+						if((!room.room_players[conn.id].beingHooked)&&(message.isThrowHook)){
+							room.room_players[conn.id].setHookTarget(message.mouse_x,message.mouse_y);
 						}
 						break;
 					case "delay" :
-						room_players[conn.id].delay = message.delay;
+						room.room_players[conn.id].delay = message.delay;
 						break;
                     default:
                         console.log("Unhandled " + message.type);
@@ -304,19 +218,28 @@ function CHServer(sock) {
             });
         });
 
+		// update rooms and players
 		setInterval(function(){
 			var nameList = [];
 			playerList.forEach(function(p){
 				nameList.push(p.name);
 			});
+
+			var roomNameList = [];
+			roomList.forEach(function(r){
+				if (r.playerCount != 0) {
+					roomNameList.push(r.name);
+				}
+			});
+
 			BroadcastAllInLobby({
-				type: 'update_player_list',
-				list: nameList
+				type: 'update_player_room_list',
+				player_list: nameList,
+				room_list: roomNameList,
+				nextRoom: nextRID
 			}, null)
 		}, 10);
 
-        // cal the game loop
-        setInterval(function() {gameLoop();}, 1000/Config.FRAME_RATE);
     };
 
     /*
@@ -325,27 +248,39 @@ function CHServer(sock) {
      * Called when a new connection is detected.
      * Create and init the new player.
      */
-    var newPlayerInRoom = function (conn, player) {
-        // Create player object and insert into room_players with key = conn.id
-		var team = roomList[0].playerCount%2;
+    var newPlayerInRoom = function (conn, player, room_name) {
+		var team = 0;
+		var room = undefined;
+		console.log('Room size : ' + roomList.length);
+		roomList.forEach(function(r) {
+			if (r.name == room_name) {
+				room = r;
+				team = r.playerCount%2;
+			}
+		});
+
+		if (room == undefined) {
+			console.log('> Room not created!')
+		}
+
 		if(team == 1){
 			player.x = 100;
 			player.y = 100*(Math.floor((Math.random()*5)+1));
 			player.initialX = 100;
 			player.initialY = 100*(Math.floor((Math.random()*5)+1));
-			room_players[conn.id] = player;
+			room.room_players[conn.id] = player;
 		}
 		else{
 			player.x = 700;
 			player.y = 100*(Math.floor((Math.random()*5)+1));
 			player.initialX = 700;
 			player.initialY = 100*(Math.floor((Math.random()*5)+1));
-			room_players[conn.id] = player;
+			room.room_players[conn.id] = player;
 		}
 
-		room_players[conn.id].teamID = team;
+		room.room_players[conn.id].teamID = team;
         sockets[player.pid] = conn;
-        console.log('New player ' + conn.id + ' added.\n');
+        console.log('> New player ' + conn.id + ' added.\n');
     };
 
     /*
@@ -441,14 +376,5 @@ function CHServer(sock) {
 	}
 
 }
-
-function distanceBetweenTwoPoints(x1,y1,x2,y2){
-	var diffX = x1-x2;
-	var diffY = y1-y2;
-	
-	var distance = Math.sqrt(diffX*diffX+diffY*diffY);
-	return distance;
-}
-
 
 global.CHServer = CHServer;

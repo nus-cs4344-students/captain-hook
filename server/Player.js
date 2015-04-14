@@ -39,24 +39,6 @@ function Player(_x, _y, _pid, _socket)
             return 0;
         }
     };
-	
-    this.Ready = function()
-    {
-        if (this.room != null)
-        {
-            this.is_ready = true;
-            this.room.broadCast("[PLAYERREADY;" + this.name + "]", this); // Send ready message to all players
-        }
-    };
-
-    this.Cancel = function()
-    {
-        if (this.room != null)
-        {
-            this.is_ready = false;
-            this.room.broadCast("[PLAYERCANCEL;" + this.name + "]", this); // Send cancel message to all players
-        }
-    };
 
     this.joinRoom = function(roomName, roomList)
     {
@@ -64,39 +46,23 @@ function Player(_x, _y, _pid, _socket)
         var cplayer = this;
         var roomExist = false;
 
-        roomList.forEach(function(r){
-            if (r.name == roomName)
-            {
+        roomList.forEach(function(r) {
+            if (r.name == roomName) {
                 roomExist = true;
                 console.log("> ROOM EXIST! Count:" + r.playerCount + " / " + r.maxPlayer);
-                if (r.playerCount < r.maxPlayer)
-                {
-                    r.players.push(cplayer);
+                if (r.playerCount < r.maxPlayer) {
                     r.playerCount++;
-                    // Switch room state
-                    if (r.playerCount < r.maxPlayer)
-                    {
-                        r.Wait(); // Still waiting for players
-                    }
-                    else
-                    {
-                        if (r.IsWaiting()) r.Ready(); // Switch to ready state
-                    }
+
                     cplayer.room = r;
                     console.log("[!] " + cplayer.name + " joined room " + r.name);
-                    //r.broadCast("[JOINROOM;" + cplayer.name + "]", cplayer);
-                    //cplayer.socket.write("[JOINEDROOM;" + r.name + "]");
-                }
-                else
-                {
-                    //cplayer.socket.write("[ROOMFULL;" + r.name + "]");
+                } else {
                     console.log("[!] Room " + r.name + " is full");
                 }
             }
         });
+
         if (roomExist == false)
         {
-            //cplayer.socket.write("[NOROOM;" + roomName + "]");
             console.log("[!] Room " + roomName + " not found");
         }
     };
@@ -107,17 +73,12 @@ function Player(_x, _y, _pid, _socket)
 
         if (this.room != null)
         {
-            this.room.players.remove(this);
             this.room.playerCount--;
-            if (this.room.playerCount < this.room.maxPlayer)
-            {
-                this.room.Wait();
-            }
-            //this.room.broadCast("[LEFTROOM;" + this.name + "]", this);
             console.log("[!] " + this.name + " left room " + this.room.name);
-            this.room = null;
+			this.room = null;
         }
     };
+
 	//--------template for shiyu client reply-------------------------
 	/*
 		when player press any arrow key, client sends movement packet to server. server checks whether this client is being hooked, if not run calculatePositionByDirection(); if yes run calculatePositionByHook().
@@ -317,4 +278,5 @@ function distanceBetweenTwoPoints(x1,y1,x2,y2){
 	//console.log(distance);
 	return distance;
 }
+
 global.Player = Player;

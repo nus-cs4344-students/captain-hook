@@ -1,5 +1,5 @@
 
-function Captain(game, xPos, yPos, sid, tid, pname){
+function Captain(game, xPos, yPos, sid, tid, pname, _rName){
 	this.hook;
 	
 	// Initialize Captain's Sprite
@@ -44,6 +44,7 @@ function Captain(game, xPos, yPos, sid, tid, pname){
 	this.lastUpdate = 0;
 	this.delay = 0;
 	this.speedOfHook = 500;
+	this.roomName = _rName;
 	
 	this.hud = Phaser.Plugin.HUDManager.create(game, this, 'captainHUD');
   	this.healthHUD = this.hud.addBar(0, -20, 32, 2, 100, 'hp', this, Phaser.Plugin.HUDManager.HEALTHBAR, false);
