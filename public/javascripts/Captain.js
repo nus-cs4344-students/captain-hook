@@ -136,6 +136,7 @@ Captain.prototype.update = function(x, y, hp, hook_x, hook_y, beingHooked, hookR
 		}
 		this.numberOfTailBits = 0;
 	}
+
 	if (respawn){
 		this.sprite.x = this.initialX;
 		this.sprite.y = this.initialY;

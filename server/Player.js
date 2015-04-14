@@ -5,8 +5,6 @@ function Player(_x, _y, _pid, _socket)
     this.y = _y;
 	this.initialX = _x;
 	this.initialY = _y;
-	this.vx = 0;
-	this.vy = 0;
 	this.hx;
 	this.hy;
 	this.beingHooked = false;

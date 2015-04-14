@@ -20,7 +20,6 @@ function LobbyClient() {
 
                     var box = document.getElementById('chatarea');
                     box.appendChild(item);
-                    box.addFrame(item);
                     box.scrollTop = box.scrollHeight;
 
                     break;
@@ -34,7 +33,6 @@ function LobbyClient() {
 
                     var box = document.getElementById('chatarea');
                     box.appendChild(item);
-                    box.addFrame(item);
                     box.scrollTop = box.scrollHeight;
 
                     break;
@@ -48,7 +46,6 @@ function LobbyClient() {
 
                     var box = document.getElementById('chatarea');
                     box.appendChild(item);
-                    box.addFrame(item);
                     box.scrollTop = box.scrollHeight;
                     break;
                 case "incomming_msg":

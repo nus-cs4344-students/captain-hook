@@ -83,6 +83,8 @@ function CHServer(sock) {
 			if(p.hp<1){
 				p.x = p.initialX;
 				p.y = p.initialY;
+				console.log(p.x);
+				console.log(p.y);
 				p.hp = 100;
 				p.respawn = true;
 				p.beingHooked = false;
@@ -298,7 +300,6 @@ function CHServer(sock) {
 						break;
                     default:
                         console.log("Unhandled " + message.type);
-						console.log("Unhandled " + message);
                 }
             });
         });
@@ -329,12 +330,16 @@ function CHServer(sock) {
 		var team = roomList[0].playerCount%2;
 		if(team == 1){
 			player.x = 100;
-			player.y = 100;
+			player.y = 100*(Math.floor((Math.random()*5)+1));
+			player.initialX = 100;
+			player.initialY = 100*(Math.floor((Math.random()*5)+1));
 			room_players[conn.id] = player;
 		}
 		else{
 			player.x = 700;
-			player.y = 100*(team+1);
+			player.y = 100*(Math.floor((Math.random()*5)+1));
+			player.initialX = 700;
+			player.initialY = 100*(Math.floor((Math.random()*5)+1));
 			room_players[conn.id] = player;
 		}
 
