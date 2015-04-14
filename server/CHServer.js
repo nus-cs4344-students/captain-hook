@@ -125,9 +125,6 @@ function CHServer(sock) {
                     case "join_room":
 						msgProcessed = true;
                         var room_name = message.room;
-                        console.log(lobby_player.name + " > SELECTED ROOM: " + room_name);
-                        lobby_player.joinRoom(room_name, roomList);
-                        newPlayerInRoom(conn, lobby_player, room_name);
 
 						var room = undefined;
 						roomList.forEach(function(r) {
@@ -135,6 +132,19 @@ function CHServer(sock) {
 								room = r;
 							}
 						});
+
+						// reject if room is full
+						if (room.playerCount >= 6) {
+							unicast(conn, {
+								type:"reject",
+								room:room_name
+							});
+							return;
+						}
+
+                        console.log(lobby_player.name + " > SELECTED ROOM: " + room_name);
+                        lobby_player.joinRoom(room_name, roomList);
+                        newPlayerInRoom(conn, lobby_player, room_name);
 
 						console.log('> Room try to join ...' + room.name);
 						if (room === undefined) {

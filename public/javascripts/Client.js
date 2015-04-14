@@ -199,6 +199,23 @@ function Client() {
                     sendJoinRoomMsg(message.room_id);
                     break;
 
+                case "reject":
+                    var text = message.room + ' has reached maximum players 6! Try another room.';
+
+                    var item = document.createElement('div');
+                    item.className = 'ui red message';
+                    item.textContent = text;
+
+                    var box = document.getElementById('chatarea');
+                    box.appendChild(item);
+                    box.scrollTop = box.scrollHeight;
+
+                    var section3 = document.getElementById('section3');
+                    section3.style.visibility = 'hidden';
+                    roomJoined = undefined;
+
+                    break;
+
                 case "update_player_room_list":
                     var players = message.player_list;
                     var ui = document.getElementById('player_list');
