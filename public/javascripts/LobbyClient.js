@@ -24,6 +24,21 @@ function LobbyClient() {
                     box.scrollTop = box.scrollHeight;
 
                     break;
+
+                case 'given_name':
+                    var text = 'Your name is ' + message.name;
+
+                    var item = document.createElement('div');
+                    item.className = 'ui pink message';
+                    item.textContent = text;
+
+                    var box = document.getElementById('chatarea');
+                    box.appendChild(item);
+                    box.addFrame(item);
+                    box.scrollTop = box.scrollHeight;
+
+                    break;
+
                 case 'player_disconnection':
                     var text = message.name + ' disconnected!';
 

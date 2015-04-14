@@ -177,6 +177,8 @@ function CHServer(sock) {
 				name: lobby_player.name
 			}, lobby_player);
 
+			unicast(conn, {type: 'given_name', name: lobby_player.name});
+
             // When the client closes the connection to the
             // tell other clients the client left
             conn.on('close', function () {
@@ -208,11 +210,13 @@ function CHServer(sock) {
 
             // When the client send something to the server.
             conn.on('data', function (data) {
+				var msgProcessed = false;
                 var message = JSON.parse(data);
 
                 switch (message.type) {
                     // for chatting
                     case "chat":
+						msgProcessed = true;
                         console.log('Broadcast : ' + message.msg + ' for ' + lobby_player.name);
                         var json_msg = {
                             'type': 'incomming_msg',
@@ -223,6 +227,7 @@ function CHServer(sock) {
                         break;
 
                     case "join_room":
+						msgProcessed = true;
                         var room_name = message.room;
                         console.log(lobby_player.name + " > SELECTED ROOM: " + room_name);
                         lobby_player.joinRoom(room_name, roomList);
@@ -266,6 +271,10 @@ function CHServer(sock) {
                         break;
                 }
 
+				if (msgProcessed) {
+					return;
+				}
+
                 var p = room_players[conn.id];
                 if (p === undefined) {
                     // we received data from a connection with
@@ -286,6 +295,7 @@ function CHServer(sock) {
 						break;
                     default:
                         console.log("Unhandled " + message.type);
+						console.log("Unhandled " + message);
                 }
             });
         });
