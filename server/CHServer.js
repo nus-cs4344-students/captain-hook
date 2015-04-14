@@ -260,7 +260,7 @@ function CHServer(sock) {
                 if (p === undefined) {
                     // we received data from a connection with
                     // no corresponding player.  don't do anything.
-                    console.log("player at " + conn.id + " is invalid.");
+                    // console.log("player at " + conn.id + " is invalid.");
 					return;
                 }
 
@@ -304,7 +304,6 @@ function CHServer(sock) {
     var newPlayerInRoom = function (conn, player) {
         // Create player object and insert into room_players with key = conn.id
 		var team = roomList[0].playerCount%2;
-		console.log('number '+ roomList[0].playerCount);
 		if(team == 1){
 			player.x = 100;
 			player.y = 100;
@@ -376,21 +375,6 @@ function CHServer(sock) {
 		for (var i = 0; i < this.length; i++) {
 			if (name == this[i].name) { return this[i]; }
 		}
-	};
-
-	// Add trim feature
-	String.prototype.trim=function(){return this.replace(/^\s+|\s+$/g, '');};
-	String.prototype.ltrim=function(){return this.replace(/^\s+/,'');};
-	String.prototype.rtrim=function(){return this.replace(/\s+$/,'');};
-	String.prototype.fulltrim=function(){return this.replace(/(?:(?:^|\n)\s+|\s+(?:$|\n))/,'');};
-
-	// Add startsWith and endsWidth function for strings
-	String.prototype.startsWith = function(prefix) {
-		return this.indexOf(prefix) === 0;
-	};
-
-	String.prototype.endsWith = function(suffix) {
-		return this.match(suffix+"$") == suffix;
 	};
 
 	// Global Broadcast Function

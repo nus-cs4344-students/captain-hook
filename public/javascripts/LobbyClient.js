@@ -13,15 +13,39 @@ function LobbyClient() {
             switch (message.type) {
                 case "new_lobby_player":
                     var text = message.name + ' joined!';
-                    document.getElementById('chatarea').value = document.getElementById('chatarea').value +'\nInfo : ' + text;
+
+                    var item = document.createElement('div');
+                    item.className = 'ui yellow message';
+                    item.textContent = text;
+
+                    var box = document.getElementById('chatarea');
+                    box.appendChild(item);
+                    box.addFrame(item);
+                    box.scrollTop = box.scrollHeight;
+
                     break;
                 case 'player_disconnection':
                     var text = message.name + ' disconnected!';
-                    document.getElementById('chatarea').value = document.getElementById('chatarea').value +'\nInfo : ' + text;
+
+                    var item = document.createElement('div');
+                    item.className = 'ui red message';
+                    item.textContent = text;
+
+                    var box = document.getElementById('chatarea');
+                    box.appendChild(item);
+                    box.addFrame(item);
+                    box.scrollTop = box.scrollHeight;
                     break;
                 case "incomming_msg":
-                    var text = message.name + ' says : ' + message.msg;
-                    document.getElementById('chatarea').value = document.getElementById('chatarea').value +'\n' + text;
+                    var text = message.name + ' says > ' + message.msg;
+
+                    var item = document.createElement('div');
+                    item.setAttribute('align', 'left');
+                    item.textContent = text;
+
+                    var box = document.getElementById('chatarea');
+                    box.appendChild(item);
+                    box.scrollTop = box.scrollHeight;
                     break;
 
                 case "update_player_list":
@@ -33,16 +57,16 @@ function LobbyClient() {
 
                         players.forEach(function (p) {
                             var item = document.createElement('div');
-                            item.class = 'item';
+                            item.className = 'item';
                             var image = document.createElement('img');
-                            image.class = 'ui avatar image';
+                            image.className = 'ui avatar image';
                             image.src = 'assets/daniel.jpg';
 
                             var header_div = document.createElement('div');
-                            header_div.class = 'content';
+                            header_div.className = 'content';
 
                             var header = document.createElement('div');
-                            header.class = 'header';
+                            header.className = 'header';
                             header.textContent = p;
 
                             header_div.appendChild(header);
@@ -69,6 +93,16 @@ function LobbyClient() {
         window.location.replace(link);
     };
 
+    this.searchKeyPress = function(e)
+    {
+        // look for window.event in case event isn't passed in
+        e = e || window.event;
+        if (e.keyCode == 13)
+        {
+            document.getElementById('message_send').click();
+        }
+    };
+
     this.sendChatMessage = function() {
         var text = document.getElementById('message_input').value;
         sendToServer({
@@ -76,7 +110,13 @@ function LobbyClient() {
             msg: text
         });
 
-        document.getElementById('chatarea').value = document.getElementById('chatarea').value +'\nme > ' + text;
+        var item = document.createElement('div');
+        item.setAttribute('align', 'left');
+        item.textContent = 'me > ' + text;
+
+        var box = document.getElementById('chatarea');
+        box.appendChild(item);
+        box.scrollTop = box.scrollHeight;
 
         document.getElementById('message_input').value = '';
     };

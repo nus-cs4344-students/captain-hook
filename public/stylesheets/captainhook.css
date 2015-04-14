@@ -8,3 +8,13 @@
     padding: 3rem 0rem;
 }
 
+#chatarea {
+    min-height:25rem;
+    max-height:25rem;
+    -webkit-box-sizing: border-box; /* Safari/Chrome, other WebKit */
+    -moz-box-sizing: border-box;    /* Firefox, other Gecko */
+    box-sizing: border-box;         /* Opera/IE 8+ */
+    color: #006600;
+    overflow: auto;
+}
+
