@@ -470,6 +470,12 @@ function Client() {
             name: roomJoined
         });
         roomJoined = undefined;
+        // clear all characters
+        console.log(captains.length);
+        for (var id in captains) {
+            captains[id].sprite.kill();
+        }
+        myCaptain.sprite.kill();
     };
 
     /**
