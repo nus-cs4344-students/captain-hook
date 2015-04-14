@@ -242,7 +242,8 @@ function CHServer(sock) {
                             id: pid,
                             x: player.x,
                             y: player.y,
-							tid: player.teamID
+							tid: player.teamID,
+							pname: player.name
                         });
 
                         // and tell everyone.
@@ -251,7 +252,8 @@ function CHServer(sock) {
                             id: pid,
                             x: player.x,
                             y: player.y,
-							tid: player.teamID
+							tid: player.teamID,
+							pname: player.name
                         }, pid);
 
                         // Tell this new guy who else is in the game.
@@ -263,7 +265,8 @@ function CHServer(sock) {
                                         id: room_players[i].pid,
                                         x: room_players[i].x,
                                         y: room_players[i].y,
-										tid: room_players[i].teamID
+										tid: room_players[i].teamID,
+										pname: room_players[i].name
                                     });
                                 }
                             }

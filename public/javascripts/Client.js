@@ -2,11 +2,7 @@
 function Client() {
     var sock;           // socket to server
     var captains = {};  // Array of captains currently in game
-    var hooks = [];     // Array of hooks
     var myCaptain;
-    var myHook;
-    var isMyHookThrown = false;
-    var pillars = [];
     var cursors;
 	var wKey;
 	var sKey;
@@ -15,8 +11,6 @@ function Client() {
 	var opponentTeamScore = 0;
 	var delay=0;
 	var calculatedDelay = 0;
-	var gameInfor = "";
-    //var that = this;
 
     var game = new Phaser.Game(800, 608, Phaser.CANVAS, 'captain-hook', { preload: preload, create: create, update: update, render: render });
 
@@ -52,15 +46,14 @@ function Client() {
         cursors = game.input.keyboard.createCursorKeys();
 		wKey = game.input.keyboard.addKey(Phaser.Keyboard.W);
 		sKey = game.input.keyboard.addKey(Phaser.Keyboard.S);
-		var style = { font: "20px Arial", fill: "#ff0044", align: "center" };
+		var style = { font: "15px Arial", fill: "#ff0044", align: "center" };
 		gameInfo = game.add.text(230, 20, "", style);
-		///*
-		if((window.DeviceMotionEvent)||('listenForDeviceMovement' in window)){
+
+		if((window.DeviceMotionEvent) || ('listenForDeviceMovement' in window)){
 			window.addEventListener("devicemotion", onDeviceMotion,false);
 		}
-		//*/
     }
-	///*
+
 	function onDeviceMotion (e){
 		var x = e.accelerationIncludingGravity.x;
 		var y = e.accelerationIncludingGravity.y;
@@ -143,14 +136,14 @@ function Client() {
         var count= [];
         sock.onmessage = function(e) {
             var message = JSON.parse(e.data);
-            //console.log('Client received : ' + e.data);
+
             switch (message.type) {
                 case "joined":
                     // Server allows THIS player to join game
                     myId = message.id;
                     myStartPos_x = message.x;
                     myStartPos_y = message.y;
-                    myCaptain = new Captain(game, myStartPos_x, myStartPos_y, myId, message.tid);
+                    myCaptain = new Captain(game, myStartPos_x, myStartPos_y, myId, message.tid, message.pname);
                     captains[myId] = myCaptain;
                     ready = true;
                     break;
@@ -160,7 +153,7 @@ function Client() {
                     playerId = message.id;
                     playerStartPos_x = message.x;
                     playerStartPos_y = message.y;
-                    captains[playerId] = new Captain(game, playerStartPos_x, playerStartPos_y, playerId, message.tid);
+                    captains[playerId] = new Captain(game, playerStartPos_x, playerStartPos_y, playerId, message.tid, message.pname);
                     break;
 					
 				case "message":
@@ -181,6 +174,7 @@ function Client() {
 					if(captains[message.id] == undefined || t<captains[message.id].lastUpdate){
 						break;
 					}
+
                     playerId = message.id;
                     playerNewPos_x = message.x;
                     playerNewPos_y = message.y;
@@ -210,17 +204,11 @@ function Client() {
                             break;
                         case "noChange" :
                             count[playerId]++;
-                            //if (count[playerId] > 100) {
-                                captains[playerId].sprite.animations.stop();
-                                //count[playerId] = 0;
-                            //}
+                            captains[playerId].sprite.animations.stop();
                             break;
                     }
-					//setTimeout(captains[playerId].update,calculatedDelay,playerNewPos_x, playerNewPos_y, playerHp, hookNewPos_x, hookNewPos_y,beingHooked,hookReturn,killHook,isShoot,respawn,timestamp,playerDelay);
-					//setTimeout(function(){
+
 					captains[playerId].update(playerNewPos_x, playerNewPos_y, playerHp, hookNewPos_x, hookNewPos_y,beingHooked,hookReturn,killHook,isShoot,respawn,timestamp,playerDelay);
-					//},calculatedDelay);
-					
 
                     if(myCaptain.playerID==message.id){
 						myTeamScore = message.playerTeamScore;
@@ -229,14 +217,8 @@ function Client() {
                     break;
 
                 default:
-                    //console.log("error: undefined command " + message.type);
+                    console.log("error: undefined command " + message.type);
             }
-        };
-
-        sock.onclose = function() {
-            // Connection to server has closed.  Delete everything.
-            //console.log('Clear All Player');
-            //clearAllPlayers();
         };
 
         sock.onopen = function() {
@@ -294,7 +276,6 @@ function Client() {
 		}
     }
 
-     
     /*
      * Main (Phaser) game loop
      */
@@ -315,14 +296,13 @@ function Client() {
 		else{
 			myTeam = "red";
 		}
-		gameInfo.setText(" player ID: "+myCaptain.playerID+" team Color: "+myTeam+" HP: "+myCaptain.hp+"\n"+" my team score: "+ myTeamScore+"\n"+" opponent team score: "+opponentTeamScore+"\n"+" delay: "+delay+"\n"+"updating delay: "+calculatedDelay+" ms");
-		//game.debug.text(" player ID: "+myCaptain.playerID+" team Color: "+myTeam+" HP: "+myCaptain.hp,232,32);
-		//game.debug.text(" my team score: "+ myTeamScore,302,54);
-		//game.debug.text(" opponent team score: "+opponentTeamScore,302,76);
-        //game.debug.text(" x:" + myCaptain.sprite.body.x + "   y:" + myCaptain.sprite.body.y + " player ID:" + myCaptain.playerID + " total other players:" + captains.length+ " HP:" + myCaptain.hp+" team ID: "+myCaptain.teamID, 32, 32);
-		//game.debug.text(" isShoot: "+ myCaptain.isShooting + " killHook: " + myCaptain.killHook + " hookReturn: "+myCaptain.hookReturn + " beingHooked: "+myCaptain.beingHooked + " respawn: "+myCaptain.respawn,32,54);
-		//game.debug.text("last time update for my character: "+myCaptain.lastUpdate+ " delay: "+delay+" ms",32,150);
-        //game.debug.spriteInfo(sprite, 32, 450);
+
+        document.getElementById('color').textContent = myTeam;
+        document.getElementById('hp').textContent = Math.round(myCaptain.hp) + '';
+        document.getElementById('my').textContent = myTeamScore + '';
+        document.getElementById('opponent').textContent = opponentTeamScore + '';
+        document.getElementById('delay').textContent = delay+' ms';
+        document.getElementById('update_delay').textContent = calculatedDelay+' ms';
     }
 
     function checkDirection(prev_x, prev_y, new_x, new_y) {
