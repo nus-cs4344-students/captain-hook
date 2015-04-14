@@ -102,6 +102,12 @@ function CHServer(sock) {
 		//for(var i=0;i<room_players.length;i++){
 		var date = new Date();
 		var currentTime = date.getTime();
+		var maxDelay = 0;
+		for(var i in room_players){
+			if(room_players[i].delay>maxDelay){
+				maxDelay = room_players[i].delay;
+			}
+		}
 		for(var i in room_players){
 			//console.log("broadcasting");
 			var p = room_players[i];
@@ -134,13 +140,17 @@ function CHServer(sock) {
 				teamID: p.teamID,
 				playerTeamScore:playerTeamScore,
 				opponentTeamScore:opponentTeamScore,
+				playerDelay:p.delay,
 				timestamp:currentTime
 			};
+			
+
 			for(var j in room_players){
 				var delay = room_players[j].getDelay();
 				var pid = room_players[j].pid;
-				//console.log("player("+pid+")'s delay: "+delay);
-				setTimeout(unicast(sockets[pid],states),delay);
+				//unicast(sockets[pid],states);
+				var calculatedDelay = delay+Math.abs(maxDelay-delay);
+				setTimeout(unicast,calculatedDelay,sockets[pid],states);
 			}
 		}
     };
