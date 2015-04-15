@@ -74,13 +74,34 @@ function Captain(game, xPos, yPos, sid, tid, pname, _rName){
 	this.addTailBit = function() {
 		this.tailBits[this.numberOfTailBits] = game.add.sprite(this.sprite.x+10,this.sprite.y+10,'tailBit');
 		game.physics.enable(this.tailBits[this.numberOfTailBits],Phaser.Physics.ARCADE);
-		if (this.numberOfTailBits == 0) {
-			this.game.physics.arcade.moveToObject(this.tailBits[this.numberOfTailBits], this.hook, this.speedOfHook);
-		} else {
-			this.game.physics.arcade.moveToObject(this.tailBits[this.numberOfTailBits], this.tailBits[this.numberOfTailBits-1], this.speedOfHook);
-		}
+		//if (this.numberOfTailBits == 0) {
+			//this.game.physics.arcade.moveToObject(this.tailBits[this.numberOfTailBits], this.hook, this.speedOfHook);
+		//} else {
+		//	this.game.physics.arcade.moveToObject(this.tailBits[this.numberOfTailBits], this.tailBits[this.numberOfTailBits-1], this.speedOfHook);
+		//}
 		this.numberOfTailBits++;
 	};
+	
+	this.distanceBetweenTwoPoints = function(x1,y1,x2,y2){
+		var diffX = x1-x2;
+		var diffY = y1-y2;
+		
+		var distance = Math.sqrt(diffX*diffX+diffY*diffY);
+		//console.log(distance);
+		return distance;
+	}
+	
+	this.moveToObject = function(i,object){
+		var targetX = object.x;
+		var targetY = object.y;
+		var directionX = targetX-this.tailBits[i].x;
+		var directionY = targetY-this.tailBits[i].y;
+		var magnitude = Math.sqrt(directionX*directionX+directionY*directionY);
+		directionX = directionX/magnitude;
+		directionY = directionY/magnitude;
+		this.tailBits[i].x += 0.02602 * directionX * 500;
+		this.tailBits[i].y += 0.02602 * directionY * 500;
+	}
 	
 	this.disableCollision = function(){
 		this.sprite.body.checkCollision.left=false;
@@ -148,24 +169,31 @@ Captain.prototype.update = function(x, y, hp, hook_x, hook_y, beingHooked, hookR
 	// Creates tail of hook
 	if (this.isHookCreated) {
 		if (this.numberOfTailBits == 0) {
-			if (this.game.physics.arcade.distanceBetween(this.hook, this.sprite) > 16) {
+		
+			if (this.distanceBetweenTwoPoints(this.hook.x,this.hook.y, this.sprite.x,this.sprite.y) >= 30) {
 				this.addTailBit();
 			}
 		} else {
-			if (this.game.physics.arcade.distanceBetween(this.tailBits[this.numberOfTailBits-1], this.sprite) > 16) {
+				//console.log("distance between:"+this.game.physics.arcade.distanceBetween(this.tailBits[0], this.sprite));
+			if (this.distanceBetweenTwoPoints(this.tailBits[this.numberOfTailBits-1].x,this.tailBits[this.numberOfTailBits-1].y, this.sprite.x,this.sprite.y) >= 20) {
+				
 				this.addTailBit();
 			}
+		
+
 		}
 
 		if (!hookReturn) {
 			for (var i = 0; i < this.numberOfTailBits; i++) {
-				this.game.physics.arcade.moveToObject(this.tailBits[i], this.hook, this.speedOfHook);
+				//this.game.physics.arcade.moveToObject(this.tailBits[i], this.hook, this.speedOfHook);
+				this.moveToObject(i,this.hook);
 			}
 		} else {
 			for (var i = 0; i < this.numberOfTailBits; i++) {
-				this.game.physics.arcade.moveToObject(this.tailBits[i], this.sprite, this.speedOfHook);
+				//this.game.physics.arcade.moveToObject(this.tailBits[i], this.sprite, this.speedOfHook);
+				this.moveToObject(i,this.sprite);
 
-				if (this.game.physics.arcade.distanceBetween(this.tailBits[i], this.sprite) < 9) {
+				if (this.distanceBetweenTwoPoints(this.tailBits[i].x,this.tailBits[i].y, this.sprite.x,this.sprite.y) < 9) {
 					this.tailBits[i].kill();
 				}
 			}

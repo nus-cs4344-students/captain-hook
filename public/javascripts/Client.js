@@ -80,7 +80,9 @@ function Client() {
 				myCaptain.sprite.animations.play('right');
 			}
 			else {
-				myCaptain.sprite.animations.stop();
+				if(myCaptain.sprite!=undefined){
+					myCaptain.sprite.animations.stop();
+				}
 				isKeyDown = false;
 			}
 		}
