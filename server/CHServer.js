@@ -206,8 +206,11 @@ function CHServer(sock) {
 					}
 				});
 
-				var p = room.room_players[conn.id];
+				if (room == undefined) {
+					return;
+				}
 
+				var p = room.room_players[conn.id];
 				if (p == undefined) {
 					return;
 				}

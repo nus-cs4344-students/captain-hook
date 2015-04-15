@@ -494,7 +494,7 @@ function Client() {
         }
         myCaptain.sprite.kill();
         // refresh room list, set to 0 to trigger refresh
-        room_size = 0;
+        room_size = -1;
     };
 
     /**
