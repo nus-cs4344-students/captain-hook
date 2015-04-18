@@ -66,7 +66,7 @@ Phaser.Plugin.HUDManager.prototype.$watch = function(watchFn, listenerFn) {
   var watcher = {
     watchFn: watchFn,
     listenerFn: listenerFn || function() {},
-    last: initWatchVal,
+    last: initWatchVal
   };
   this.$$watchers.push(watcher);
   this.$$lastDirtyWatch = null;
@@ -156,6 +156,7 @@ Phaser.Plugin.HUDManager.prototype.addBar = function(x, y, width, height, max, w
       bmd.ctx.closePath();
       bmd.ctx.fillStyle = backgroundColor;
       bmd.ctx.fill();
+
       bmd.ctx.beginPath();
       bmd.ctx.rect(0,0,width*percent, height);
       bmd.ctx.fillStyle = colorFunction(percent);

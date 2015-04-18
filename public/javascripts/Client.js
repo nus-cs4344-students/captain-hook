@@ -2,11 +2,7 @@
 function Client() {
     var sock;           // socket to server
     var captains = {};  // Array of captains currently in game
-    var hooks = [];     // Array of hooks
     var myCaptain;
-    var myHook;
-    var isMyHookThrown = false;
-    var pillars = [];
     var cursors;
 	var wKey;
 	var sKey;
@@ -15,8 +11,10 @@ function Client() {
 	var opponentTeamScore = 0;
 	var delay=0;
 	var calculatedDelay = 0;
-	var gameInfor = "";
-    //var that = this;
+    var roomJoined = undefined;
+
+    var player_size = 0;
+    var room_size = 0;
 
     var game = new Phaser.Game(800, 608, Phaser.CANVAS, 'captain-hook', { preload: preload, create: create, update: update, render: render });
 
@@ -52,15 +50,14 @@ function Client() {
         cursors = game.input.keyboard.createCursorKeys();
 		wKey = game.input.keyboard.addKey(Phaser.Keyboard.W);
 		sKey = game.input.keyboard.addKey(Phaser.Keyboard.S);
-		var style = { font: "20px Arial", fill: "#ff0044", align: "center" };
+		var style = { font: "15px Arial", fill: "#ff0044", align: "center" };
 		gameInfo = game.add.text(230, 20, "", style);
-		///*
-		if((window.DeviceMotionEvent)||('listenForDeviceMovement' in window)){
+
+		if((window.DeviceMotionEvent) || ('listenForDeviceMovement' in window)){
 			window.addEventListener("devicemotion", onDeviceMotion,false);
 		}
-		//*/
     }
-	///*
+
 	function onDeviceMotion (e){
 		var x = e.accelerationIncludingGravity.x;
 		var y = e.accelerationIncludingGravity.y;
@@ -145,14 +142,156 @@ function Client() {
         var count= [];
         sock.onmessage = function(e) {
             var message = JSON.parse(e.data);
-            //console.log('Client received : ' + e.data);
+
             switch (message.type) {
+                /**
+                 * For chat service
+                 */
+                case "new_lobby_player":
+                    var text = message.name + ' joined!';
+
+                    var item = document.createElement('div');
+                    item.className = 'ui yellow message';
+                    item.textContent = text;
+
+                    var box = document.getElementById('chatarea');
+                    box.appendChild(item);
+                    box.scrollTop = box.scrollHeight;
+
+                    break;
+
+                case 'given_name':
+                    var text = 'Your name is ' + message.name;
+
+                    var item = document.createElement('div');
+                    item.className = 'ui pink message';
+                    item.textContent = text;
+
+                    var box = document.getElementById('chatarea');
+                    box.appendChild(item);
+                    box.scrollTop = box.scrollHeight;
+
+                    break;
+
+                case 'player_disconnection':
+                    var text = message.name + ' disconnected!';
+
+                    var item = document.createElement('div');
+                    item.className = 'ui red message';
+                    item.textContent = text;
+
+                    var box = document.getElementById('chatarea');
+                    box.appendChild(item);
+                    box.scrollTop = box.scrollHeight;
+                    break;
+
+                case "incomming_msg":
+                    var text = message.name + ' says > ' + message.msg;
+
+                    var item = document.createElement('div');
+                    item.setAttribute('align', 'left');
+                    item.textContent = text;
+
+                    var box = document.getElementById('chatarea');
+                    box.appendChild(item);
+                    box.scrollTop = box.scrollHeight;
+                    break;
+
+                case "created_room":
+                    sendJoinRoomMsg(message.room_id);
+                    break;
+
+                case "reject":
+                    var text = message.room + ' has reached maximum players 6! Try another room.';
+
+                    var item = document.createElement('div');
+                    item.className = 'ui red message';
+                    item.textContent = text;
+
+                    var box = document.getElementById('chatarea');
+                    box.appendChild(item);
+                    box.scrollTop = box.scrollHeight;
+
+                    var section3 = document.getElementById('section3');
+                    section3.style.visibility = 'hidden';
+                    roomJoined = undefined;
+
+                    break;
+
+                case "update_player_room_list":
+                    var players = message.player_list;
+                    var ui = document.getElementById('player_list');
+
+                    if (player_size != players.length) {
+                        $(ui).empty();
+
+                        players.forEach(function (p) {
+                            var item = document.createElement('div');
+                            item.className = 'item';
+                            var image = document.createElement('img');
+                            image.className = 'ui avatar image';
+                            image.src = 'assets/daniel.jpg';
+
+                            var header_div = document.createElement('div');
+                            header_div.className = 'content';
+
+                            var header = document.createElement('div');
+                            header.className = 'header';
+                            header.textContent = p;
+
+                            header_div.appendChild(header);
+
+                            item.appendChild(image);
+                            ui.appendChild(item);
+                            ui.appendChild(header_div);
+                            console.log(p);
+                        });
+                        player_size = players.length;
+                    }
+
+                    var rooms = message.room_list;
+                    var room_ui = document.getElementById('room_list');
+
+                    if (room_size != rooms.length) {
+                        $(room_ui).empty();
+
+                        rooms.forEach(function (r) {
+                            var item = document.createElement('div');
+                            item.className = 'item';
+
+                            var button = document.createElement('div');
+                            button.className = "ui labeled icon blue button";
+                            button.id = r;
+                            button.setAttribute('onclick', 'client.joinRoom(this.id)');
+
+                            var icon = document.createElement('i');
+                            icon.className = 'game icon';
+
+                            var detail = document.createElement('div');
+                            detail.textContent = r;
+
+                            button.appendChild(icon);
+                            button.appendChild(detail);
+                            item.appendChild(button);
+
+                            var list = document.getElementById('room_list');
+                            list.appendChild(item);
+
+                        });
+                        room_size = rooms.length;
+                    }
+
+                    break;
+
+                /**
+                 * For game
+                 */
                 case "joined":
                     // Server allows THIS player to join game
                     myId = message.id;
                     myStartPos_x = message.x;
                     myStartPos_y = message.y;
-                    myCaptain = new Captain(game, myStartPos_x, myStartPos_y, myId, message.tid);
+                    myCaptain = new Captain(game, myStartPos_x, myStartPos_y, myId, message.tid, message.pname, message.rname);
                     captains[myId] = myCaptain;
                     ready = true;
                     break;
@@ -162,7 +301,11 @@ function Client() {
                     playerId = message.id;
                     playerStartPos_x = message.x;
                     playerStartPos_y = message.y;
-                    captains[playerId] = new Captain(game, playerStartPos_x, playerStartPos_y, playerId, message.tid);
+                    if (myCaptain.roomName == message.rname) {
+                        captains[playerId] = new Captain(game, playerStartPos_x, playerStartPos_y, playerId, message.tid, message.pname);
+                    } else {
+                        return;
+                    }
                     break;
 					
 				case "message":
@@ -183,6 +326,7 @@ function Client() {
 					if(captains[message.id] == undefined || t<captains[message.id].lastUpdate){
 						break;
 					}
+
                     playerId = message.id;
                     playerNewPos_x = message.x;
                     playerNewPos_y = message.y;
@@ -212,17 +356,11 @@ function Client() {
                             break;
                         case "noChange" :
                             count[playerId]++;
-                            //if (count[playerId] > 100) {
-                                captains[playerId].sprite.animations.stop();
-                                //count[playerId] = 0;
-                            //}
+                            captains[playerId].sprite.animations.stop();
                             break;
                     }
-					//setTimeout(captains[playerId].update,calculatedDelay,playerNewPos_x, playerNewPos_y, playerHp, hookNewPos_x, hookNewPos_y,beingHooked,hookReturn,killHook,isShoot,respawn,timestamp,playerDelay);
-					//setTimeout(function(){
+
 					captains[playerId].update(playerNewPos_x, playerNewPos_y, playerHp, hookNewPos_x, hookNewPos_y,beingHooked,hookReturn,killHook,isShoot,respawn,timestamp,playerDelay);
-					//},calculatedDelay);
-					
 
                     if(myCaptain.playerID==message.id){
 						myTeamScore = message.playerTeamScore;
@@ -231,20 +369,16 @@ function Client() {
                     break;
 
                 default:
-                    //console.log("error: undefined command " + message.type);
+                    console.log("error: undefined command " + message.type);
             }
         };
 
-        sock.onclose = function() {
-            // Connection to server has closed.  Delete everything.
-            //console.log('Clear All Player');
-            //clearAllPlayers();
-        };
-
+        /*
         sock.onopen = function() {
             // When connection to server is open, ask to join.
             sendToServer({type:"join_room", room: "game"});
         }
+        */
     };
 
     function updateMyActionsToServer() {
@@ -279,14 +413,15 @@ function Client() {
 				direction: cursorDirection,
 				isThrowHook: isThrowHook,
 				mouse_x: game.input.x,
-				mouse_y: game.input.y
+				mouse_y: game.input.y,
+                room: roomJoined
 			};
             setTimeout(sendToServer,delay,states);
         }    
 		
 		if (wKey.isDown){
 			delay += 20;
-			sendToServer({type:"delay", delay:delay});
+			sendToServer({type:"delay", delay:delay, room:roomJoined});
 		} else if (sKey.isDown) {
 			if (delay >= 20) {
 				delay -= 20;
@@ -296,7 +431,6 @@ function Client() {
 		}
     }
 
-     
     /*
      * Main (Phaser) game loop
      */
@@ -317,14 +451,14 @@ function Client() {
 		else{
 			myTeam = "red";
 		}
-		gameInfo.setText(" player ID: "+myCaptain.playerID+" team Color: "+myTeam+" HP: "+myCaptain.hp+"\n"+" my team score: "+ myTeamScore+"\n"+" opponent team score: "+opponentTeamScore+"\n"+" delay: "+delay+"\n"+"updating delay: "+calculatedDelay+" ms");
-		//game.debug.text(" player ID: "+myCaptain.playerID+" team Color: "+myTeam+" HP: "+myCaptain.hp,232,32);
-		//game.debug.text(" my team score: "+ myTeamScore,302,54);
-		//game.debug.text(" opponent team score: "+opponentTeamScore,302,76);
-        //game.debug.text(" x:" + myCaptain.sprite.body.x + "   y:" + myCaptain.sprite.body.y + " player ID:" + myCaptain.playerID + " total other players:" + captains.length+ " HP:" + myCaptain.hp+" team ID: "+myCaptain.teamID, 32, 32);
-		//game.debug.text(" isShoot: "+ myCaptain.isShooting + " killHook: " + myCaptain.killHook + " hookReturn: "+myCaptain.hookReturn + " beingHooked: "+myCaptain.beingHooked + " respawn: "+myCaptain.respawn,32,54);
-		//game.debug.text("last time update for my character: "+myCaptain.lastUpdate+ " delay: "+delay+" ms",32,150);
-        //game.debug.spriteInfo(sprite, 32, 450);
+
+        document.getElementById('room').textContent = myCaptain.roomName;
+        document.getElementById('color').textContent = myTeam;
+        document.getElementById('hp').textContent = Math.round(myCaptain.hp) + '';
+        document.getElementById('my').textContent = myTeamScore + '';
+        document.getElementById('opponent').textContent = opponentTeamScore + '';
+        document.getElementById('delay').textContent = delay+' ms';
+        document.getElementById('update_delay').textContent = calculatedDelay+' ms';
     }
 
     function checkDirection(prev_x, prev_y, new_x, new_y) {
@@ -340,6 +474,82 @@ function Client() {
             return "noChange";
         }
     }
+
+    this.createNewRoom = function() {
+        sendToServer({
+            type: 'create_room'
+        });
+    };
+
+    this.leaveRoom = function() {
+        var section3 = document.getElementById('section3');
+        section3.style.visibility = 'hidden';
+        sendToServer({
+            type: 'leave_room',
+            name: roomJoined
+        });
+        roomJoined = undefined;
+        // clear all characters
+        console.log(captains.length);
+        for (var id in captains) {
+            captains[id].sprite.kill();
+        }
+        myCaptain.sprite.kill();
+        // refresh room list, set to 0 to trigger refresh
+        room_size = -1;
+    };
+
+    /**
+     * For chat service
+     */
+    function sendJoinRoomMsg(room_id) {
+        var section3 = document.getElementById('section3');
+        section3.style.visibility = 'visible';
+        roomJoined = room_id;
+        sendToServer({
+            type: 'join_room',
+            room: room_id
+        });
+    }
+
+    // from doc element
+    this.joinRoom = function(room_id) {
+        var section3 = document.getElementById('section3');
+        section3.style.visibility = 'visible';
+        roomJoined = room_id;
+        sendToServer({
+            type: 'join_room',
+            room: room_id
+        });
+    };
+
+    this.searchKeyPress = function(e)
+    {
+        // look for window.event in case event isn't passed in
+        e = e || window.event;
+        if (e.keyCode == 13)
+        {
+            document.getElementById('message_send').click();
+        }
+    };
+
+    this.sendChatMessage = function() {
+        var text = document.getElementById('message_input').value;
+        sendToServer({
+            type: 'chat',
+            msg: text
+        });
+
+        var item = document.createElement('div');
+        item.setAttribute('align', 'left');
+        item.textContent = 'me > ' + text;
+
+        var box = document.getElementById('chatarea');
+        box.appendChild(item);
+        box.scrollTop = box.scrollHeight;
+
+        document.getElementById('message_input').value = '';
+    };
 }
 
 var client = new Client();
