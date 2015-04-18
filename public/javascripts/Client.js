@@ -4,13 +4,13 @@ function Client() {
     var captains = {};  // Array of captains currently in game
     var myCaptain;
     var cursors;
-	var wKey;
-	var sKey;
+    var wKey;
+    var sKey;
     var ready = false;
-	var myTeamScore = 0;
-	var opponentTeamScore = 0;
-	var delay=0;
-	var calculatedDelay = 0;
+    var myTeamScore = 0;
+    var opponentTeamScore = 0;
+    var delay=0;
+    var calculatedDelay = 0;
     var roomJoined = undefined;
 
     var player_size = 0;
@@ -48,21 +48,18 @@ function Client() {
         layer2.resizeWorld();
 
         cursors = game.input.keyboard.createCursorKeys();
-		wKey = game.input.keyboard.addKey(Phaser.Keyboard.W);
-		sKey = game.input.keyboard.addKey(Phaser.Keyboard.S);
-		var style = { font: "15px Arial", fill: "#ff0044", align: "center" };
-		gameInfo = game.add.text(230, 20, "", style);
+        wKey = game.input.keyboard.addKey(Phaser.Keyboard.W);
+        sKey = game.input.keyboard.addKey(Phaser.Keyboard.S);
+        var style = { font: "15px Arial", fill: "#ff0044", align: "center" };
+        gameInfo = game.add.text(230, 20, "", style);
 
-		if((window.DeviceMotionEvent) || ('listenForDeviceMovement' in window)){
-			window.addEventListener("devicemotion", onDeviceMotion,false);
-		}
     }
 
-	function onDeviceMotion (e){
-		var x = e.accelerationIncludingGravity.x;
-		var y = e.accelerationIncludingGravity.y;
-		//var z = e.accelerationIncludingGravity.z;
-		var max = Math.max(Math.abs(x),Math.abs(y));
+    function onDeviceMotion (e){
+        var x = e.accelerationIncludingGravity.x;
+        var y = e.accelerationIncludingGravity.y;
+        //var z = e.accelerationIncludingGravity.z;
+        var max = Math.max(Math.abs(x),Math.abs(y));
         var isKeyDown = true;
         var isThrowHook = false;
         if (game.input.activePointer.isDown) {
@@ -70,46 +67,61 @@ function Client() {
         }
 
         var cursorDirection = "";
-		if(max==Math.abs(x)){
-			if(x>0){
-				cursorDirection = "left";
-				myCaptain.sprite.animations.play('left');
-			}
-			else if(x<0){
-				cursorDirection = "right";
-				myCaptain.sprite.animations.play('right');
-			}
-			else {
-				if(myCaptain.sprite!=undefined){
-					myCaptain.sprite.animations.stop();
-				}
-				isKeyDown = false;
-			}
-		}
-		else if(max==Math.abs(y)){
-			if(y<0){
-				cursorDirection = "up";
-				myCaptain.sprite.animations.play('up');
-			}
-			else if(y>0){
-				cursorDirection = "down";
-				myCaptain.sprite.animations.play('down');
-			}
-			else {
-				myCaptain.sprite.animations.stop();
-				isKeyDown = false;
-			}
-		}
-		
+        if(max==Math.abs(x)){
+            if(x>1){
+                cursorDirection = "left";
+                myCaptain.sprite.animations.play('left');
+            }
+            else if(x<0){
+                if(Math.abs(x)>1) {
+                    cursorDirection = "right";
+                    myCaptain.sprite.animations.play('right');
+                }
+            }
+            else {
+                if(myCaptain.sprite!=undefined){
+                    myCaptain.sprite.animations.stop();
+                }
+                isKeyDown = false;
+            }
+        }
+        else if(max==Math.abs(y)){
+            if(y<0){
+                if(Math.abs(y)>1) {
+                    cursorDirection = "up";
+                    myCaptain.sprite.animations.play('up');
+                }
+            }
+            else if(y>1){
+                cursorDirection = "down";
+                myCaptain.sprite.animations.play('down');
+            }
+            else {
+                myCaptain.sprite.animations.stop();
+                isKeyDown = false;
+            }
+        }
+        
         if (isKeyDown || isThrowHook) {
-            sendToServer({type:"playerAction",
-                            id: myCaptain.playerID,
-                            direction: cursorDirection,
-                            isThrowHook: isThrowHook,
-                            mouse_x: game.input.x,
-                            mouse_y: game.input.y});
+            var states = {
+                type:"playerAction",
+                id: myCaptain.playerID,
+                direction: cursorDirection,
+                isThrowHook: isThrowHook,
+                mouse_x: game.input.x,
+                mouse_y: game.input.y,
+                room: roomJoined
+            };
+            setTimeout(sendToServer,delay,states);
+
+            // sendToServer({type:"playerAction",
+            //                 id: myCaptain.playerID,
+            //                 direction: cursorDirection,
+            //                 isThrowHook: isThrowHook,
+            //                 mouse_x: game.input.x,
+            //                 mouse_y: game.input.y});
         } 
-	}
+    }
 
     /*
      * private method: sendToServer(msg)
@@ -120,9 +132,9 @@ function Client() {
      */
     var sendToServer = function (msg) {
         //console.log("send-> " + JSON.stringify(msg));
-		var date = new Date();
-		var currentTime = date.getTime();
-		msg["timestamp"] = currentTime;
+        var date = new Date();
+        var currentTime = date.getTime();
+        msg["timestamp"] = currentTime;
         sock.send(JSON.stringify(msg));
     };
 
@@ -307,10 +319,10 @@ function Client() {
                         return;
                     }
                     break;
-					
-				case "message":
-					alert(message.content);
-					break;
+                    
+                case "message":
+                    alert(message.content);
+                    break;
 
                 case "delete":
                     // A player has left the game
@@ -322,10 +334,10 @@ function Client() {
 
                 case "update":
                     //console.log('Update position for ' + message.id);
-					var t = message.timestamp;
-					if(captains[message.id] == undefined || t<captains[message.id].lastUpdate){
-						break;
-					}
+                    var t = message.timestamp;
+                    if(captains[message.id] == undefined || t<captains[message.id].lastUpdate){
+                        break;
+                    }
 
                     playerId = message.id;
                     playerNewPos_x = message.x;
@@ -333,13 +345,13 @@ function Client() {
                     playerHp = message.hp;
                     hookNewPos_x = message.hx;
                     hookNewPos_y = message.hy;
-					hookReturn = message.hookReturn;
-					isShoot = message.isShoot;
-					beingHooked = message.beingHooked;
-					killHook = message.killHook;
-					respawn = message.respawn;
-					timestamp = message.timestamp;
-					playerDelay = message.playerDelay;
+                    hookReturn = message.hookReturn;
+                    isShoot = message.isShoot;
+                    beingHooked = message.beingHooked;
+                    killHook = message.killHook;
+                    respawn = message.respawn;
+                    timestamp = message.timestamp;
+                    playerDelay = message.playerDelay;
                     var direction = checkDirection(captains[playerId].sprite.x, captains[playerId].sprite.y, playerNewPos_x, playerNewPos_y);
                     switch (direction) {
                         case "up" :
@@ -360,12 +372,12 @@ function Client() {
                             break;
                     }
 
-					captains[playerId].update(playerNewPos_x, playerNewPos_y, playerHp, hookNewPos_x, hookNewPos_y,beingHooked,hookReturn,killHook,isShoot,respawn,timestamp,playerDelay);
+                    captains[playerId].update(playerNewPos_x, playerNewPos_y, playerHp, hookNewPos_x, hookNewPos_y,beingHooked,hookReturn,killHook,isShoot,respawn,timestamp,playerDelay);
 
                     if(myCaptain.playerID==message.id){
-						myTeamScore = message.playerTeamScore;
-						opponentTeamScore = message.opponentTeamScore;
-					}
+                        myTeamScore = message.playerTeamScore;
+                        opponentTeamScore = message.opponentTeamScore;
+                    }
                     break;
 
                 default:
@@ -405,30 +417,30 @@ function Client() {
             myCaptain.sprite.animations.stop();
             isKeyDown = false;
         } 
-		
+        
         if (isKeyDown || isThrowHook) {
-			var states = {
-				type:"playerAction",
-				id: myCaptain.playerID,
-				direction: cursorDirection,
-				isThrowHook: isThrowHook,
-				mouse_x: game.input.x,
-				mouse_y: game.input.y,
+            var states = {
+                type:"playerAction",
+                id: myCaptain.playerID,
+                direction: cursorDirection,
+                isThrowHook: isThrowHook,
+                mouse_x: game.input.x,
+                mouse_y: game.input.y,
                 room: roomJoined
-			};
+            };
             setTimeout(sendToServer,delay,states);
         }    
-		
-		if (wKey.isDown){
-			delay += 20;
-			sendToServer({type:"delay", delay:delay, room:roomJoined});
-		} else if (sKey.isDown) {
-			if (delay >= 20) {
-				delay -= 20;
-				// Send event to server
-				sendToServer({type:"delay", delay:delay});
-			}
-		}
+        
+        if (wKey.isDown){
+            delay += 20;
+            sendToServer({type:"delay", delay:delay, room:roomJoined});
+        } else if (sKey.isDown) {
+            if (delay >= 20) {
+                delay -= 20;
+                // Send event to server
+                sendToServer({type:"delay", delay:delay});
+            }
+        }
     }
 
     /*
@@ -440,17 +452,21 @@ function Client() {
 
         updateMyActionsToServer();
 
+        if((window.DeviceMotionEvent) || ('listenForDeviceMovement' in window)){
+            window.addEventListener("devicemotion", onDeviceMotion, false);
+        }
+
     }
 
     function render(pointer) {
         if (!ready) return;
-		var myTeam = "";
-		if(myCaptain.teamID==1){
-			myTeam = "blue";
-		}
-		else{
-			myTeam = "red";
-		}
+        var myTeam = "";
+        if(myCaptain.teamID==1){
+            myTeam = "blue";
+        }
+        else{
+            myTeam = "red";
+        }
 
         document.getElementById('room').textContent = myCaptain.roomName;
         document.getElementById('color').textContent = myTeam;
