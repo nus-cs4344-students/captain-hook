@@ -18,7 +18,6 @@ function Client() {
 	
 	var audio1= $("#actrl")[0];
 	var audio2= $("#actrl2")[0];
-	audio2.play();
 
     var game = new Phaser.Game(800, 608, Phaser.CANVAS, 'captain-hook', { preload: preload, create: create, update: update, render: render });
 
