@@ -35,6 +35,7 @@ function Client() {
     var layer;
     var layer2;
     function create() {
+		audio2.play();
         game.physics.startSystem(Phaser.Physics.ARCADE);
 
         game.stage.backgroundColor = '#313131';
@@ -460,6 +461,9 @@ function Client() {
         if((window.DeviceMotionEvent) || ('listenForDeviceMovement' in window)){
             window.addEventListener("devicemotion", onDeviceMotion, false);
         }
+		audio2.addEventListener('ended', function(){
+			audio2.play();
+		});
 
     }
 
