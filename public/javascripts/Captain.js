@@ -164,6 +164,10 @@ Captain.prototype.update = function(x, y, hp, hook_x, hook_y, beingHooked, hookR
 		this.sprite.y = this.initialY;
 		this.hp = 100;
 		this.respawn = false;
+		for (var i = 0; i < this.tailBits.length; i++) {
+			this.tailBits[i].kill();
+		}
+		this.numberOfTailBits = 0;
 	}
 
 	// Creates tail of hook

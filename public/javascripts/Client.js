@@ -15,6 +15,10 @@ function Client() {
 
     var player_size = 0;
     var room_size = 0;
+	
+	var audio1= $("#actrl")[0];
+	var audio2= $("#actrl2")[0];
+	audio2.play();
 
     var game = new Phaser.Game(800, 608, Phaser.CANVAS, 'captain-hook', { preload: preload, create: create, update: update, render: render });
 
@@ -63,6 +67,7 @@ function Client() {
         var isKeyDown = true;
         var isThrowHook = false;
         if (game.input.activePointer.isDown) {
+			audio1.play();
             isThrowHook = true;
         }
 
@@ -397,6 +402,7 @@ function Client() {
         var isKeyDown = true;
         var isThrowHook = false;
         if (game.input.activePointer.isDown) {
+			audio1.play();
             isThrowHook = true;
         }
 
