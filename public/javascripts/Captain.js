@@ -139,8 +139,8 @@ Captain.prototype.update = function(x, y, hp, hook_x, hook_y, beingHooked, hookR
 	//this.sprite.x = x;
 	//this.sprite.y = y;
 
-	var dt = this.lastUpdate - timestamp;
-	var tween = this.game.add.tween(this.sprite).to({x:x, y:y}, dt, Phaser.Easing.Linear.None).start();
+	if (playerDelay == 0) playerDelay = this.lastUpdate - timestamp;
+	var tween = this.game.add.tween(this.sprite).to({x:x, y:y}, playerDelay, Phaser.Easing.Linear.None).start();
 	this.lastUpdate = timestamp;
 
 	// if there is hook position, check if hook exist alr, if not create hook
