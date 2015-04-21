@@ -344,6 +344,8 @@ function Client() {
                         break;
                     }
 
+                    calculatedDelay = captains[message.id].lastUpdate - message.timestamp;
+
                     playerId = message.id;
                     playerNewPos_x = message.x;
                     playerNewPos_y = message.y;
