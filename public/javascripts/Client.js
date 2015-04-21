@@ -344,7 +344,7 @@ function Client() {
                         break;
                     }
 
-                    calculatedDelay = captains[message.id].lastUpdate - message.timestamp;
+                    calculatedDelay = Math.abs(captains[message.id].lastUpdate - message.timestamp);
 
                     playerId = message.id;
                     playerNewPos_x = message.x;
@@ -446,7 +446,7 @@ function Client() {
             if (delay >= 20) {
                 delay -= 20;
                 // Send event to server
-                sendToServer({type:"delay", delay:delay});
+                sendToServer({type:"delay", delay:delay, room:roomJoined});
             }
         }
     }
