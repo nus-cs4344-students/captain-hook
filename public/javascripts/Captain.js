@@ -41,7 +41,7 @@ function Captain(game, xPos, yPos, sid, tid, pname, _rName){
 	this.isHookCreated = false;
 	this.beingHooked = false;
 	this.respawn = false;
-	this.lastUpdate = 0;
+	this.lastUpdate = Date.now();
 	this.delay = 0;
 	this.speedOfHook = 500;
 	this.roomName = _rName;
@@ -128,16 +128,21 @@ function Captain(game, xPos, yPos, sid, tid, pname, _rName){
 
 Captain.prototype.update = function(x, y, hp, hook_x, hook_y, beingHooked, hookReturn, killHook, isShoot, respawn, timestamp, playerDelay) {
 	this.game.world.bringToTop(this.sprite);
-	this.sprite.x = x;
-	this.sprite.y = y;
 	this.hp = hp;
 	this.isShooting = isShoot;
 	this.killHook = killHook;
 	this.hookReturn = hookReturn;
 	this.beingHooked = beingHooked;
 	this.respawn = respawn;
-	this.lastUpdate = timestamp;
 	this.delay = playerDelay;
+
+	//this.sprite.x = x;
+	//this.sprite.y = y;
+
+	var dt = this.lastUpdate - timestamp;
+	this.game.add.tween(this.sprite).to({x:x, y:y}, dt, Phaser.Easing.Linear.None, true);
+	this.lastUpdate = timestamp;
+
 	// if there is hook position, check if hook exist alr, if not create hook
 	if (isShoot) {
 		// Check if hook already exist
@@ -164,22 +169,18 @@ Captain.prototype.update = function(x, y, hp, hook_x, hook_y, beingHooked, hookR
 		this.sprite.y = this.initialY;
 		this.hp = 100;
 		this.respawn = false;
-		for (var i = 0; i < this.tailBits.length; i++) {
-			this.tailBits[i].kill();
-		}
-		this.numberOfTailBits = 0;
 	}
 
 	// Creates tail of hook
 	if (this.isHookCreated) {
 		if (this.numberOfTailBits == 0) {
 		
-			if (this.distanceBetweenTwoPoints(this.hook.x,this.hook.y, this.sprite.x,this.sprite.y) >= 30) {
+			if (this.distanceBetweenTwoPoints(this.hook.x,this.hook.y, x,y) >= 30) {
 				this.addTailBit();
 			}
 		} else {
 				//console.log("distance between:"+this.game.physics.arcade.distanceBetween(this.tailBits[0], this.sprite));
-			if (this.distanceBetweenTwoPoints(this.tailBits[this.numberOfTailBits-1].x,this.tailBits[this.numberOfTailBits-1].y, this.sprite.x,this.sprite.y) >= 20) {
+			if (this.distanceBetweenTwoPoints(this.tailBits[this.numberOfTailBits-1].x,this.tailBits[this.numberOfTailBits-1].y, x,y) >= 20) {
 				
 				this.addTailBit();
 			}
@@ -197,7 +198,7 @@ Captain.prototype.update = function(x, y, hp, hook_x, hook_y, beingHooked, hookR
 				//this.game.physics.arcade.moveToObject(this.tailBits[i], this.sprite, this.speedOfHook);
 				this.moveToObject(i,this.sprite);
 
-				if (this.distanceBetweenTwoPoints(this.tailBits[i].x,this.tailBits[i].y, this.sprite.x,this.sprite.y) < 9) {
+				if (this.distanceBetweenTwoPoints(this.tailBits[i].x,this.tailBits[i].y, x,y) < 9) {
 					this.tailBits[i].kill();
 				}
 			}
