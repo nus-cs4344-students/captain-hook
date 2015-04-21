@@ -217,7 +217,7 @@ function CHServer(sock) {
 
 				switch (message.type) {
 					case "playerAction":
-						room.room_players[conn.id].calculatePositionByDirection(message.direction);
+						room.room_players[conn.id].updatePosisionAndcheckCollisionByXY(message.x, message.y);
 						if((!room.room_players[conn.id].beingHooked)&&(message.isThrowHook)){
 							room.room_players[conn.id].setHookTarget(message.mouse_x,message.mouse_y);
 						}

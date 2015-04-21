@@ -10,4 +10,5 @@ Features
 * Chat in lobby
 * Multiple room supported
 * Each room support maximum 6 players
+* Local perception filter
 

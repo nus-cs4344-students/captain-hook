@@ -118,14 +118,7 @@ function Client() {
                 room: roomJoined
             };
             setTimeout(sendToServer,delay,states);
-
-            // sendToServer({type:"playerAction",
-            //                 id: myCaptain.playerID,
-            //                 direction: cursorDirection,
-            //                 isThrowHook: isThrowHook,
-            //                 mouse_x: game.input.x,
-            //                 mouse_y: game.input.y});
-        } 
+        }
     }
 
     /*
@@ -305,9 +298,9 @@ function Client() {
                  */
                 case "joined":
                     // Server allows THIS player to join game
-                    myId = message.id;
-                    myStartPos_x = message.x;
-                    myStartPos_y = message.y;
+                    var myId = message.id;
+                    var myStartPos_x = message.x;
+                    var myStartPos_y = message.y;
                     myCaptain = new Captain(game, myStartPos_x, myStartPos_y, myId, message.tid, message.pname, message.rname);
                     captains[myId] = myCaptain;
                     ready = true;
@@ -315,9 +308,9 @@ function Client() {
 
                 case "new":
                     // New player has join the game
-                    playerId = message.id;
-                    playerStartPos_x = message.x;
-                    playerStartPos_y = message.y;
+                    var playerId = message.id;
+                    var playerStartPos_x = message.x;
+                    var playerStartPos_y = message.y;
                     if (myCaptain.roomName == message.rname) {
                         captains[playerId] = new Captain(game, playerStartPos_x, playerStartPos_y, playerId, message.tid, message.pname);
                     } else {
@@ -332,7 +325,7 @@ function Client() {
                 case "delete":
                     // A player has left the game
                     //console.log('Delete Disconnected Player : ' + message.id);
-                    playerId = message.id;
+                    var playerId = message.id;
                     captains[playerId].sprite.kill();
                     delete captains[playerId];
                     break;
@@ -340,23 +333,27 @@ function Client() {
                 case "update":
                     //console.log('Update position for ' + message.id);
                     var t = message.timestamp;
-                    if(captains[message.id] == undefined || t<captains[message.id].lastUpdate){
+                    if(captains[message.id] == undefined || t<captains[message.id].last_timestamp){
                         break;
                     }
 
-                    playerId = message.id;
-                    playerNewPos_x = message.x;
-                    playerNewPos_y = message.y;
-                    playerHp = message.hp;
-                    hookNewPos_x = message.hx;
-                    hookNewPos_y = message.hy;
-                    hookReturn = message.hookReturn;
-                    isShoot = message.isShoot;
-                    beingHooked = message.beingHooked;
-                    killHook = message.killHook;
-                    respawn = message.respawn;
+                    var is_myself = false;
+
+                    var playerId = message.id;
+                    if (myCaptain.playerID == playerId) is_myself = true;
+
+                    var playerNewPos_x = message.x;
+                    var playerNewPos_y = message.y;
+                    var playerHp = message.hp;
+                    var hookNewPos_x = message.hx;
+                    var hookNewPos_y = message.hy;
+                    var hookReturn = message.hookReturn;
+                    var isShoot = message.isShoot;
+                    var beingHooked = message.beingHooked;
+                    var killHook = message.killHook;
+                    var respawn = message.respawn;
                     timestamp = message.timestamp;
-                    playerDelay = message.playerDelay;
+                    var playerDelay = message.playerDelay;
                     var direction = checkDirection(captains[playerId].sprite.x, captains[playerId].sprite.y, playerNewPos_x, playerNewPos_y);
                     switch (direction) {
                         case "up" :
@@ -377,7 +374,7 @@ function Client() {
                             break;
                     }
 
-                    captains[playerId].update(playerNewPos_x, playerNewPos_y, playerHp, hookNewPos_x, hookNewPos_y,beingHooked,hookReturn,killHook,isShoot,respawn,timestamp,playerDelay);
+                    captains[playerId].update(playerNewPos_x, playerNewPos_y, playerHp, hookNewPos_x, hookNewPos_y,beingHooked,hookReturn,killHook,isShoot,respawn,timestamp,playerDelay, is_myself);
 
                     if(myCaptain.playerID==message.id){
                         myTeamScore = message.playerTeamScore;
@@ -390,12 +387,6 @@ function Client() {
             }
         };
 
-        /*
-        sock.onopen = function() {
-            // When connection to server is open, ask to join.
-            sendToServer({type:"join_room", room: "game"});
-        }
-        */
     };
 
     function updateMyActionsToServer() {
@@ -406,19 +397,18 @@ function Client() {
             isThrowHook = true;
         }
 
-        var cursorDirection = "";
         if (cursors.left.isDown) {
-            cursorDirection = "left";
             myCaptain.sprite.animations.play('left');
+            myCaptain.sprite.x+=(-60)*0.02602;
         } else if (cursors.right.isDown) {
-            cursorDirection = "right";
             myCaptain.sprite.animations.play('right');
+            myCaptain.sprite.x+=(60)*0.02602;
         } else if (cursors.up.isDown) {
-            cursorDirection = "up";
             myCaptain.sprite.animations.play('up');
+            myCaptain.sprite.y+=(-60)*0.02602;
         } else if (cursors.down.isDown) {
-            cursorDirection = "down";
             myCaptain.sprite.animations.play('down');
+            myCaptain.sprite.y+=(60)*0.02602;
         } else {
             myCaptain.sprite.animations.stop();
             isKeyDown = false;
@@ -428,7 +418,8 @@ function Client() {
             var states = {
                 type:"playerAction",
                 id: myCaptain.playerID,
-                direction: cursorDirection,
+                x: myCaptain.sprite.x,
+                y: myCaptain.sprite.y,
                 isThrowHook: isThrowHook,
                 mouse_x: game.input.x,
                 mouse_y: game.input.y,
@@ -464,7 +455,6 @@ function Client() {
 		audio2.addEventListener('ended', function(){
 			audio2.play();
 		});
-
     }
 
     function render(pointer) {

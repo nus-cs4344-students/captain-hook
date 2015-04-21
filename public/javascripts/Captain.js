@@ -24,6 +24,9 @@ function Captain(game, xPos, yPos, sid, tid, pname, _rName){
 	this.tailBits = [];
 	this.numberOfTailBits = 0;
 
+	// set starting timestamp
+	this.last_timestamp = Date.now();
+
 	game.world.bringToTop(this.sprite);
 
 	//Constructor
@@ -41,7 +44,6 @@ function Captain(game, xPos, yPos, sid, tid, pname, _rName){
 	this.isHookCreated = false;
 	this.beingHooked = false;
 	this.respawn = false;
-	this.lastUpdate = 0;
 	this.delay = 0;
 	this.speedOfHook = 500;
 	this.roomName = _rName;
@@ -126,18 +128,26 @@ function Captain(game, xPos, yPos, sid, tid, pname, _rName){
 }
 
 
-Captain.prototype.update = function(x, y, hp, hook_x, hook_y, beingHooked, hookReturn, killHook, isShoot, respawn, timestamp, playerDelay) {
+Captain.prototype.update = function(x, y, hp, hook_x, hook_y, beingHooked, hookReturn, killHook, isShoot, respawn, timestamp, playerDelay, isSelf) {
 	this.game.world.bringToTop(this.sprite);
-	this.sprite.x = x;
-	this.sprite.y = y;
 	this.hp = hp;
 	this.isShooting = isShoot;
 	this.killHook = killHook;
 	this.hookReturn = hookReturn;
 	this.beingHooked = beingHooked;
 	this.respawn = respawn;
-	this.lastUpdate = timestamp;
 	this.delay = playerDelay;
+
+	// LPF
+	var dt = timestamp - this.last_timestamp;
+	if (isSelf) {
+		game.add.tween(this.sprite).to({x:x, x:y}, dt, Phaser.Easing.Linear.None, true);
+	} else {
+		this.sprite.x = x;
+		this.sprite.y = y;
+	}
+	this.last_timestamp = timestamp;
+
 	// if there is hook position, check if hook exist alr, if not create hook
 	if (isShoot) {
 		// Check if hook already exist
@@ -173,18 +183,14 @@ Captain.prototype.update = function(x, y, hp, hook_x, hook_y, beingHooked, hookR
 	// Creates tail of hook
 	if (this.isHookCreated) {
 		if (this.numberOfTailBits == 0) {
-		
-			if (this.distanceBetweenTwoPoints(this.hook.x,this.hook.y, this.sprite.x,this.sprite.y) >= 30) {
+			if (this.distanceBetweenTwoPoints(this.hook.x,this.hook.y, this.sprite.x, this.sprite.y) >= 30) {
 				this.addTailBit();
 			}
 		} else {
-				//console.log("distance between:"+this.game.physics.arcade.distanceBetween(this.tailBits[0], this.sprite));
 			if (this.distanceBetweenTwoPoints(this.tailBits[this.numberOfTailBits-1].x,this.tailBits[this.numberOfTailBits-1].y, this.sprite.x,this.sprite.y) >= 20) {
 				
 				this.addTailBit();
 			}
-		
-
 		}
 
 		if (!hookReturn) {

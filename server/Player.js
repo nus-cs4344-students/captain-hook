@@ -83,24 +83,12 @@ function Player(_x, _y, _pid, _socket)
 	/*
 		when player press any arrow key, client sends movement packet to server. server checks whether this client is being hooked, if not run calculatePositionByDirection(); if yes run calculatePositionByHook().
 	*/
-	this.calculatePositionByDirection = function(direction){
+	this.updatePosisionAndcheckCollisionByXY = function(new_x, new_y){
 		var tempX = this.x;
 		var tempY = this.y;
 		if(!this.beingHooked){
-			//if(!collideWithPillars(this.x,this.y)){
-				if(direction=="left"){
-					this.x+=(-60)*0.02602;
-				}
-				else if(direction=="right"){
-					this.x+=(60)*0.02602;
-				}
-				else if(direction=="up"){
-					this.y+=(-60)*0.02602;
-				}
-				else if(direction=="down"){
-					this.y+=(60)*0.02602;
-				}
-			//}
+			this.x = new_x;
+			this.y = new_y;
 		}
 		//check collision with river
 		if(collideWithRiver(this.x,this.y)){
