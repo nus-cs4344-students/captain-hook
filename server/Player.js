@@ -74,6 +74,9 @@ function Player(_x, _y, _pid, _socket)
         if (this.room != null)
         {
             this.room.playerCount--;
+			// maintain balance
+			if (this.teamID == 0) this.room.team0Count--;
+			if (this.teamID == 1) this.room.team1Count--;
             console.log("[!] " + this.name + " left room " + this.room.name);
 			this.room = null;
         }

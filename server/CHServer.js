@@ -268,7 +268,14 @@ function CHServer(sock) {
 		roomList.forEach(function(r) {
 			if (r.name == room_name) {
 				room = r;
-				team = r.playerCount%2;
+				//team = r.playerCount%2;
+				if (r.team1Count >= r.team0Count) {
+					team = 0;
+					r.team0Count++;
+				} else {
+					team = 1;
+					r.team1Count++;
+				}
 			}
 		});
 

@@ -5,6 +5,8 @@ function Room(_name, _maxPlayer, _sockets)
     this.name = _name;
     this.maxPlayer = _maxPlayer;
     this.playerCount = 0;
+    this.team1Count = 0;
+    this.team0Count = 0;
 
     this.room_players = {}; // Associative array for room_players, indexed via socket ID
 
