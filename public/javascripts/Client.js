@@ -344,6 +344,9 @@ function Client() {
                         break;
                     }
 
+                    // calculate actual delay
+                    calculatedDelay = Math.abs(captains[message.id].lastUpdate - message.timestamp);
+
                     playerId = message.id;
                     playerNewPos_x = message.x;
                     playerNewPos_y = message.y;
